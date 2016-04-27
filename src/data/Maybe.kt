@@ -15,9 +15,9 @@ sealed class Maybe<A>: K1<Maybe.µ, A> {
     fun <A> pure(f: A): Maybe<A> = MaybeMonad.pure(f)
   }
 
-  fun <B> fmap(f: (A) -> B): Maybe<B> = MaybeMonad.fmap(f, this)
-  fun <B> ap(f: K1<µ, (A) -> B>): Maybe<B> = MaybeMonad.ap(f, this)
-  fun <B> bind(f: (A) -> K1<µ, B>): Maybe<B> = MaybeMonad.bind(f, this)
+  infix fun <B> fmap(f: (A) -> B): Maybe<B> = MaybeMonad.fmap(f, this)
+  infix fun <B> ap(f: K1<µ, (A) -> B>): Maybe<B> = MaybeMonad.ap(f, this)
+  infix fun <B> bind(f: (A) -> K1<µ, B>): Maybe<B> = MaybeMonad.bind(f, this)
 
   fun getOrElse(v: A): A {
     return when (this) {

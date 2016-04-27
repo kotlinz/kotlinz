@@ -12,13 +12,12 @@ sealed class Either<L, R>: K2<Either.µ, L, R> {
 
   companion object {
     fun <L, R> narrow(v: K1<K1<µ, L>, R>) = v as Either<L, R>
-    fun <L, R> narrow(v: K2<µ, L, R>) = v as Either<L, R>
     fun <L, S> pure(v: S): Either<L, S> = (object: EitherMonad<L> {}).pure(v)
   }
 
-  fun <S> fmap(f: (R) -> S): Either<L, S> = (object: EitherMonad<L> {}).fmap(f, this)
-  fun <S> ap(f: Either<L, (R) -> S>): Either<L, S> = (object: EitherMonad<L> {}).ap(f, this)
-  fun <S> bind(f: (R) -> Either<L, S>): Either<L, S> = (object: EitherMonad<L> {}).bind(f, this)
+  infix fun <S> fmap(f: (R) -> S): Either<L, S> = (object: EitherMonad<L> {}).fmap(f, this)
+  infix fun <S> ap(f: Either<L, (R) -> S>): Either<L, S> = (object: EitherMonad<L> {}).ap(f, this)
+  infix fun <S> bind(f: (R) -> Either<L, S>): Either<L, S> = (object: EitherMonad<L> {}).bind(f, this)
 
   private interface EitherMonad<S>: Monad<K1<µ, S>> {
     override fun <A> pure(v: A): Either<S, A> = Right(v)

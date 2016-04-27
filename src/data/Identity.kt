@@ -11,9 +11,9 @@ data class Identity<A>(val value: A): K1<Identity.µ, A> {
     fun <B> pure(v: B): Identity<B> = MonadInstance.pure(v)
   }
 
-  fun <B> fmap(f: (A) -> B): Identity<B> = MonadInstance.fmap(f, this)
-  fun <B> ap(f: Identity<(A) -> B>): Identity<B> = MonadInstance.ap(f, this)
-  fun <B> bind(f: (A) -> Identity<B>): Identity<B> = MonadInstance.bind(f, this)
+  infix fun <B> fmap(f: (A) -> B): Identity<B> = MonadInstance.fmap(f, this)
+  infix fun <B> ap(f: Identity<(A) -> B>): Identity<B> = MonadInstance.ap(f, this)
+  infix fun <B> bind(f: (A) -> Identity<B>): Identity<B> = MonadInstance.bind(f, this)
 
   private object MonadInstance: Monad<µ> {
     override fun <A> pure(v: A): Identity<A> = Identity(v)
