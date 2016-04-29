@@ -1,3 +1,8 @@
 # Kotlinz
 
-This is a ported project from Swiftz for now.
+under development...
+
+## Related
+- [Scalaz](https://github.com/scalaz/scalaz)
+- [Swiftz](https://github.com/typelift/Swiftz)
+- [highj](https://github.com/DanielGronau/highj)
