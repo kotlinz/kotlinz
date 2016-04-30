@@ -3,7 +3,8 @@ package type
 import K1
 
 interface Monad<µ>: Applicative<µ> {
-  fun <A, B> bind(f: (A) -> K1<µ, B>, v: K1<µ, A>): K1<µ, B>
+  fun <A> join(v: K1<µ, K1<µ, A>>): K1<µ, A>
+  fun <A, B> bind(f: (A) -> K1<µ, B>, v: K1<µ, A>): K1<µ, B> = join(fmap(f, v))
 }
 
 interface MonadOps<A>: Monad<A> {

@@ -14,7 +14,11 @@ interface IdentityMonad: Monad<Identity.µ> {
     return fmap(Identity.narrow(f).value, v)
   }
 
+  override fun <A> join(v: K1<Identity.µ, K1<Identity.µ, A>>): Identity<A> {
+    return Identity.narrow(Identity.narrow(v).value)
+  }
+
   override fun <A, B> bind(f: (A) -> K1<Identity.µ, B>, v: K1<Identity.µ, A>): Identity<B> {
-    return Identity.narrow(f(Identity.narrow(v).value))
+    return Identity.narrow(super.bind(f, v))
   }
 }
