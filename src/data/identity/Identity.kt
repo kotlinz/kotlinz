@@ -26,14 +26,16 @@ data class Identity<A>(val value: A): K1<Identity.µ, A> {
     private val monadOps = object: IdentityMonadOps {}
   }
 
-  // Copointed
-  fun extract(): A = copointed.extract(this)
-  private val copointed = object: IdentityCopointed {}
-
   // Monad
   infix fun <B> fmap(f: (A) -> B): Identity<B> = monad.fmap(f, this)
   infix fun <B> ap(f: Identity<(A) -> B>): Identity<B> = monad.ap(f, this)
   infix fun <B> bind(f: (A) -> Identity<B>): Identity<B> = monad.bind(f, this)
   private val monad = object: IdentityMonad {}
+
+  // Comonad
+  fun extract(): A = comonad.extract(this)
+  fun duplicate(): Identity<K1<Identity.µ, A>> = comonad.duplicate(this)
+  fun <B> extend(f: (K1<Identity.µ, A>) -> B): Identity<B> = comonad.extend(f, this)
+  private val comonad = object: IdentityComonad {}
 }
 
