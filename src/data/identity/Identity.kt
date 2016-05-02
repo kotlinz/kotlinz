@@ -7,8 +7,16 @@ data class Identity<A>(val value: A): K1<Identity.µ, A> {
 
   companion object {
     fun <A> narrow(i: K1<µ, A>): Identity<A> = i as Identity<A>
-    fun <A> pure(v: A): Identity<A> = (object: IdentityMonad {}).pure(v)
-    fun <A> join(v: K1<µ, K1<µ, A>>): Identity<A> = (object: IdentityMonad {}).join(v)
+
+    fun <A> pure(v: A): Identity<A> = monad.pure(v)
+    fun <A> join(v: K1<µ, K1<µ, A>>): Identity<A> = monad.join(v)
+
+    fun <A, B> liftM(f: (A) -> B) = monadOps.liftM(f)
+    fun <A, B, C> liftM2(f: (A,  B) -> C) =  monadOps.liftM2(f)
+    fun <A, B, C, D> liftM3(f: (A, B, C) -> D) =  monadOps.liftM3(f)
+
+    private val monad = object: IdentityMonad {}
+    private val monadOps = object: IdentityMonadOps {}
   }
 
   fun extract(): A = copointed.extract(this)
