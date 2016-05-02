@@ -1,7 +1,7 @@
 package data.state
 
 import K1
-import type.Monad
+import type.monad.Monad
 
 interface StateMonad<S>: Monad<K1<State.µ, S>> {
   override fun <A> pure(v: A): State<S, A> = State { s -> Pair(v, s) }

@@ -1,7 +1,7 @@
 package data.identity
 
 import K1
-import type.Monad
+import type.monad.Monad
 
 interface IdentityMonad: Monad<Identity.µ> {
   override fun <A> pure(v: A): Identity<A> = Identity(v)

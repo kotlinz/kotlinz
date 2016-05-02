@@ -1,7 +1,7 @@
 package data.maybe
 
 import K1
-import type.Monad
+import type.monad.Monad
 
 interface MaybeMonad: Monad<Maybe.µ> {
   override fun <B> pure(f: B): Maybe<B> = Maybe.Just(f)

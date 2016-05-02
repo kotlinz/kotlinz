@@ -1,7 +1,7 @@
 package data.either
 
 import K1
-import type.Monad
+import type.monad.Monad
 
 interface EitherMonad<S>: Monad<K1<Either.µ, S>> {
   override fun <A> pure(v: A): Either<S, A> = Either.Right(v)
