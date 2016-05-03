@@ -3,12 +3,8 @@ package data.identity
 import K1
 import type.monad.Monad
 
-interface IdentityMonad: Monad<Identity.µ> {
+interface IdentityMonad: Monad<Identity.µ>, IdentityFunctor {
   override fun <A> pure(v: A): Identity<A> = Identity(v)
-
-  override fun <A, B> fmap(f: (A) -> B, v: K1<Identity.µ, A>): Identity<B> {
-    return Identity(f(Identity.narrow(v).value))
-  }
 
   override fun <A, B> ap(f: K1<Identity.µ, (A) -> B>, v: K1<Identity.µ, A>): Identity<B> {
     return fmap(Identity.narrow(f).value, v)
