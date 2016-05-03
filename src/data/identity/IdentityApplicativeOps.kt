@@ -8,6 +8,7 @@ interface IdentityApplicativeOps: ApplicativeOps<Identity.µ>, IdentityMonad {
   override fun <A, B> liftA(f: (A) -> B): (K1<Identity.µ, A>) -> Identity<B> {
     return { a -> Identity.narrow(a) ap Identity.pure(f) }
   }
+
   override fun <A, B, C> liftA2(f: (A, B) -> C): (K1<Identity.µ, A>, K1<Identity.µ, B>) -> Identity<C> {
     return { a1, a2 ->
       val i1 = Identity.narrow(a1)

@@ -3,7 +3,7 @@ package data.maybe
 import K1
 import type.applicative.Applicative
 
-interface MaybeApplicative: Applicative<Maybe.µ> {
+interface MaybeApplicative: Applicative<Maybe.µ>, MaybeFunctor {
   override fun <B> pure(v: B): Maybe<B> = Maybe.Just(v)
 
   override fun <A, B> ap(f: K1<Maybe.µ, (A) -> B>, v: K1<Maybe.µ, A>): Maybe<B> {
