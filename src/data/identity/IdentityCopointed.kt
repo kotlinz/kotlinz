@@ -1,6 +1,6 @@
 package data.identity
 
-import type.Copointed
+import type.pointed.Copointed
 import K1
 
 interface IdentityCopointed: Copointed<Identity.µ> {

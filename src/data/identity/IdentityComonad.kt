@@ -1,7 +1,7 @@
 package data.identity
 
 import K1
-import type.Comonad
+import type.monad.Comonad
 
 interface IdentityComonad: Comonad<Identity.µ>, IdentityFunctor {
   override fun <A> extract(v: K1<Identity.µ, A>): A = Identity.narrow(v).value

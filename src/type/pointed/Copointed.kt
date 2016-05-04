@@ -1,4 +1,4 @@
-package type
+package type.pointed
 
 import K1
 
