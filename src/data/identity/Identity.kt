@@ -24,6 +24,10 @@ data class Identity<A>(val value: A): K1<Identity.µ, A> {
     fun <A, B, C> liftM2(f: (A,  B) -> C) =  monadOps.liftM2(f)
     fun <A, B, C, D> liftM3(f: (A, B, C) -> D) =  monadOps.liftM3(f)
     private val monadOps = object: IdentityMonadOps {}
+
+    // MonadZip
+    infix fun <A, B> munzip(m: K1<Identity.µ, Pair<A, B>>): Pair<Identity<A>, Identity<B>> = monadZip.munzip(m)
+    private val monadZip = object: IdentityMonadZip {}
   }
 
   // Monad
@@ -31,6 +35,11 @@ data class Identity<A>(val value: A): K1<Identity.µ, A> {
   infix fun <B> ap(f: Identity<(A) -> B>): Identity<B> = monad.ap(f, this)
   infix fun <B> bind(f: (A) -> Identity<B>): Identity<B> = monad.bind(f, this)
   private val monad = object: IdentityMonad {}
+
+  // MonadZip
+  infix fun <B> mzip(m: K1<Identity.µ, B>): Identity<Pair<A, B>> = monadZip.mzip(this, m)
+  fun <B, C> mzipWith(m: K1<Identity.µ, B>, f: (A,  B) -> C): Identity<C> = monadZip.mzipWith(this, m, f)
+  private val monadZip = object: IdentityMonadZip {}
 
   // Comonad
   fun extract(): A = comonad.extract(this)
