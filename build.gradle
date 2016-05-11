@@ -1,4 +1,7 @@
 apply plugin: 'kotlin'
+apply plugin: 'maven'
+
+group = 'com.github.unhappychoice'
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
