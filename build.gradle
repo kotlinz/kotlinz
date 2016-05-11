@@ -24,7 +24,7 @@ scmVersion {
     }
 }
 
-group = 'com.github.unhappychoice'
+group = 'com.github.unhappychoice.kotlinz'
 project.version = scmVersion.version
 
 repositories {
