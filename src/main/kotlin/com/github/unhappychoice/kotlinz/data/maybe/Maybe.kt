@@ -2,19 +2,19 @@ package com.github.unhappychoice.kotlinz.data.maybe
 
 import com.github.unhappychoice.kotlinz.K1
 
-sealed class Maybe<A>: K1<Maybe.µ, A> {
+sealed class Maybe<A>: K1<Maybe.T, A> {
 
-  class µ {}
+  class T {}
 
   class None<A>: Maybe<A>()
   class Just<A>(val value: A): Maybe<A>()
 
   companion object {
-    fun <A> narrow(v: K1<Maybe.µ, A>): Maybe<A> = v as Maybe<A>
+    fun <A> narrow(v: K1<Maybe.T, A>): Maybe<A> = v as Maybe<A>
 
     // Monad
     fun <A> pure(f: A): Maybe<A> = (object: MaybeMonad {}).pure(f)
-    fun <A> join(v: K1<Maybe.µ, K1<Maybe.µ, A>>): Maybe<A> = monad.join(v)
+    fun <A> join(v: K1<Maybe.T, K1<Maybe.T, A>>): Maybe<A> = monad.join(v)
     private val monad = object: MaybeMonad {}
 
     // ApplicativeOps
@@ -32,8 +32,8 @@ sealed class Maybe<A>: K1<Maybe.µ, A> {
 
   // Monad
   infix fun <B> fmap(f: (A) -> B): Maybe<B> = monad.fmap(f, this)
-  infix fun <B> ap(f: K1<Maybe.µ, (A) -> B>): Maybe<B> = monad.ap(f, this)
-  infix fun <B> bind(f: (A) -> K1<Maybe.µ, B>): Maybe<B> = monad.bind(f, this)
+  infix fun <B> ap(f: K1<Maybe.T, (A) -> B>): Maybe<B> = monad.ap(f, this)
+  infix fun <B> bind(f: (A) -> K1<Maybe.T, B>): Maybe<B> = monad.bind(f, this)
   private val monad = object: MaybeMonad {}
 
   fun getOrElse(v: A): A {

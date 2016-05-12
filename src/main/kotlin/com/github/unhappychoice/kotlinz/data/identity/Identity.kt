@@ -2,15 +2,15 @@ package com.github.unhappychoice.kotlinz.data.identity
 
 import com.github.unhappychoice.kotlinz.K1
 
-data class Identity<A>(val value: A): K1<Identity.µ, A> {
-  class µ {}
+data class Identity<A>(val value: A): K1<Identity.T, A> {
+  class T {}
 
   companion object {
-    fun <A> narrow(i: K1<Identity.µ, A>): Identity<A> = i as Identity<A>
+    fun <A> narrow(i: K1<Identity.T, A>): Identity<A> = i as Identity<A>
 
     // Monad
     fun <A> pure(v: A): Identity<A> = monad.pure(v)
-    fun <A> join(v: K1<Identity.µ, K1<Identity.µ, A>>): Identity<A> = monad.join(v)
+    fun <A> join(v: K1<Identity.T, K1<Identity.T, A>>): Identity<A> = monad.join(v)
     private val monad = object: IdentityMonad {}
 
     // ApplicativeOps1
@@ -26,7 +26,7 @@ data class Identity<A>(val value: A): K1<Identity.µ, A> {
     private val monadOps = object: IdentityMonadOps {}
 
     // MonadZip
-    infix fun <A, B> munzip(m: K1<Identity.µ, Pair<A, B>>): Pair<Identity<A>, Identity<B>> = monadZip.munzip(m)
+    infix fun <A, B> munzip(m: K1<Identity.T, Pair<A, B>>): Pair<Identity<A>, Identity<B>> = monadZip.munzip(m)
     private val monadZip = object: IdentityMonadZip {}
   }
 
@@ -37,14 +37,14 @@ data class Identity<A>(val value: A): K1<Identity.µ, A> {
   private val monad = object: IdentityMonad {}
 
   // MonadZip
-  infix fun <B> mzip(m: K1<Identity.µ, B>): Identity<Pair<A, B>> = monadZip.mzip(this, m)
-  fun <B, C> mzipWith(m: K1<Identity.µ, B>, f: (A,  B) -> C): Identity<C> = monadZip.mzipWith(this, m, f)
+  infix fun <B> mzip(m: K1<Identity.T, B>): Identity<Pair<A, B>> = monadZip.mzip(this, m)
+  fun <B, C> mzipWith(m: K1<Identity.T, B>, f: (A,  B) -> C): Identity<C> = monadZip.mzipWith(this, m, f)
   private val monadZip = object: IdentityMonadZip {}
 
   // Comonad
   fun extract(): A = comonad.extract(this)
-  fun duplicate(): Identity<K1<Identity.µ, A>> = comonad.duplicate(this)
-  fun <B> extend(f: (K1<Identity.µ, A>) -> B): Identity<B> = comonad.extend(f, this)
+  fun duplicate(): Identity<K1<Identity.T, A>> = comonad.duplicate(this)
+  fun <B> extend(f: (K1<Identity.T, A>) -> B): Identity<B> = comonad.extend(f, this)
   private val comonad = object: IdentityComonad {}
 }
 

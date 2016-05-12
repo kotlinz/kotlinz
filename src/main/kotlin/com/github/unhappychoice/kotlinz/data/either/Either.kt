@@ -3,18 +3,18 @@ package com.github.unhappychoice.kotlinz.data.either
 import com.github.unhappychoice.kotlinz.K1
 import com.github.unhappychoice.kotlinz.K2
 
-sealed class Either<L, R>: K2<Either.µ, L, R> {
-  class µ {}
+sealed class Either<L, R>: K2<Either.T, L, R> {
+  class T {}
 
   class Left<L, R>(val value: L): Either<L, R>()
   class Right<L, R>(val value: R): Either<L, R>()
 
   companion object {
-    fun <L, R> narrow(v: K1<K1<Either.µ, L>, R>) = v as Either<L, R>
+    fun <L, R> narrow(v: K1<K1<Either.T, L>, R>) = v as Either<L, R>
 
     // Monad
     fun <L, S> pure(v: S): Either<L, S> = monad<L>().pure(v)
-    fun <L, S> join(v: K1<K1<Either.µ, L>, K1<K1<Either.µ, L>, S>>): Either<L, S> = monad<L>().join(v)
+    fun <L, S> join(v: K1<K1<Either.T, L>, K1<K1<Either.T, L>, S>>): Either<L, S> = monad<L>().join(v)
     private fun <L> monad() = object: EitherMonad<L> {}
 
     // ApplicativeOps

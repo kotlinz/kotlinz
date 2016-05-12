@@ -3,8 +3,8 @@ package com.github.unhappychoice.kotlinz.data.maybe
 import com.github.unhappychoice.kotlinz.K1
 import com.github.unhappychoice.kotlinz.type.monad.Monad
 
-interface MaybeMonad: Monad<Maybe.µ>, MaybeApplicative, MaybeFunctor {
-  override fun <A> join(v: K1<Maybe.µ, K1<Maybe.µ, A>>): Maybe<A> {
+interface MaybeMonad: Monad<Maybe.T>, MaybeApplicative, MaybeFunctor {
+  override fun <A> join(v: K1<Maybe.T, K1<Maybe.T, A>>): Maybe<A> {
     val maybe = Maybe.narrow(v)
     return when (maybe) {
       is Maybe.Just -> Maybe.narrow(maybe.value)
@@ -12,7 +12,7 @@ interface MaybeMonad: Monad<Maybe.µ>, MaybeApplicative, MaybeFunctor {
     }
   }
 
-  override fun <A, B> bind(f: (A) -> K1<Maybe.µ, B>, v: K1<Maybe.µ, A>): Maybe<B> {
+  override fun <A, B> bind(f: (A) -> K1<Maybe.T, B>, v: K1<Maybe.T, A>): Maybe<B> {
     return Maybe.narrow(super.bind(f, v))
   }
 }

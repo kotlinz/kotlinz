@@ -2,8 +2,8 @@ package com.github.unhappychoice.kotlinz.type.monad
 
 import com.github.unhappychoice.kotlinz.K1
 
-interface MonadZip<µ>: Monad<µ> {
-  fun <A, B> mzip(m1: K1<µ, A>, m2: K1<µ, B>): K1<µ, Pair<A, B>>
-  fun <A, B, C> mzipWith(m1: K1<µ, A>, m2: K1<µ, B>, f: (A, B) -> C): K1<µ, C>
-  fun <A, B> munzip(m : K1<µ, Pair<A, B>>): Pair<K1<µ, A>, K1<µ, B>>
+interface MonadZip<T>: Monad<T> {
+  fun <A, B> mzip(m1: K1<T, A>, m2: K1<T, B>): K1<T, Pair<A, B>>
+  fun <A, B, C> mzipWith(m1: K1<T, A>, m2: K1<T, B>, f: (A, B) -> C): K1<T, C>
+  fun <A, B> munzip(m : K1<T, Pair<A, B>>): Pair<K1<T, A>, K1<T, B>>
 }

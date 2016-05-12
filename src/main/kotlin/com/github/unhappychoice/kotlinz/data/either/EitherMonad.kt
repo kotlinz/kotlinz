@@ -3,8 +3,8 @@ package com.github.unhappychoice.kotlinz.data.either
 import com.github.unhappychoice.kotlinz.K1
 import com.github.unhappychoice.kotlinz.type.monad.Monad
 
-interface EitherMonad<S>: Monad<K1<Either.µ, S>>, EitherApplicative<S>, EitherFunctor<S> {
-  override fun <A> join(v: K1<K1<Either.µ, S>, K1<K1<Either.µ, S>, A>>): Either<S, A> {
+interface EitherMonad<S>: Monad<K1<Either.T, S>>, EitherApplicative<S>, EitherFunctor<S> {
+  override fun <A> join(v: K1<K1<Either.T, S>, K1<K1<Either.T, S>, A>>): Either<S, A> {
     val either = Either.narrow(v)
     return when (either) {
       is Either.Right -> Either.narrow(either.value)
@@ -12,7 +12,7 @@ interface EitherMonad<S>: Monad<K1<Either.µ, S>>, EitherApplicative<S>, EitherF
     }
   }
 
-  override fun <A, B> bind(f: (A) -> K1<K1<Either.µ, S>, B>, v: K1<K1<Either.µ, S>, A>): Either<S, B> {
+  override fun <A, B> bind(f: (A) -> K1<K1<Either.T, S>, B>, v: K1<K1<Either.T, S>, A>): Either<S, B> {
     return Either.narrow(super.bind(f, v))
   }
 }

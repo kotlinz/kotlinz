@@ -3,15 +3,15 @@ package com.github.unhappychoice.kotlinz.data.state
 import com.github.unhappychoice.kotlinz.K1
 import com.github.unhappychoice.kotlinz.type.monad.MonadOps
 
-interface StateMonadOps<S>: MonadOps<K1<State.µ, S>>, StateMonad<S> {
-  override fun <A, B> liftM(f: (A) -> B): (K1<K1<State.µ, S>, A>) -> K1<K1<State.µ, S>, B> {
+interface StateMonadOps<S>: MonadOps<K1<State.T, S>>, StateMonad<S> {
+  override fun <A, B> liftM(f: (A) -> B): (K1<K1<State.T, S>, A>) -> K1<K1<State.T, S>, B> {
     return { m ->
       val i = State.narrow(m)
       i bind { x -> State.pure<S, B>(f(x)) }
     }
   }
 
-  override fun <A, B, C> liftM2(f: (A,  B) -> C): (K1<K1<State.µ, S>, A>, K1<K1<State.µ, S>, B>) -> K1<K1<State.µ, S>, C> {
+  override fun <A, B, C> liftM2(f: (A,  B) -> C): (K1<K1<State.T, S>, A>, K1<K1<State.T, S>, B>) -> K1<K1<State.T, S>, C> {
     return { m1, m2 ->
       val i1 = State.narrow(m1)
       val i2 = State.narrow(m2)
@@ -19,7 +19,7 @@ interface StateMonadOps<S>: MonadOps<K1<State.µ, S>>, StateMonad<S> {
     }
   }
 
-  override fun <A, B, C, D> liftM3(f: (A, B, C) -> D): (K1<K1<State.µ, S>, A>, K1<K1<State.µ, S>, B>, K1<K1<State.µ, S>, C>) -> K1<K1<State.µ, S>, D> {
+  override fun <A, B, C, D> liftM3(f: (A, B, C) -> D): (K1<K1<State.T, S>, A>, K1<K1<State.T, S>, B>, K1<K1<State.T, S>, C>) -> K1<K1<State.T, S>, D> {
     return { m1, m2, m3 ->
       val i1 = State.narrow(m1)
       val i2 = State.narrow(m2)

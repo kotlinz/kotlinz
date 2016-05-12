@@ -3,15 +3,15 @@ package com.github.unhappychoice.kotlinz.data.state
 import com.github.unhappychoice.kotlinz.K1
 import com.github.unhappychoice.kotlinz.K2
 
-class State<S, A>(val value: (S) -> Pair<A, S>): K2<State.µ, S, A> {
-  class µ {}
+class State<S, A>(val value: (S) -> Pair<A, S>): K2<State.T, S, A> {
+  class T {}
 
   companion object {
-    fun <S, A> narrow(v: K1<K1<State.µ, S>, A>) = v as State<S, A>
+    fun <S, A> narrow(v: K1<K1<State.T, S>, A>) = v as State<S, A>
 
     // Monad
     fun <S, A> pure(v: A): State<S, A> = monad<S>().pure(v)
-    fun <S, A> join(v: K1<K1<State.µ, S>, K1<K1<State.µ, S>, A>>): State<S, A> = monad<S>().join(v)
+    fun <S, A> join(v: K1<K1<State.T, S>, K1<K1<State.T, S>, A>>): State<S, A> = monad<S>().join(v)
     private fun <S> monad() = object: StateMonad<S> {}
 
     // ApplicativeOps

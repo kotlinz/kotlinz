@@ -4,12 +4,12 @@ import com.github.unhappychoice.kotlinz.K1
 import com.github.unhappychoice.kotlinz.curried
 import com.github.unhappychoice.kotlinz.type.applicative.ApplicativeOps
 
-interface EitherApplicativeOps<S>: ApplicativeOps<K1<Either.µ, S>>, EitherMonad<S> {
-  override fun <A, B> liftA(f: (A) -> B): (K1<K1<Either.µ, S>, A>) -> Either<S, B> {
+interface EitherApplicativeOps<S>: ApplicativeOps<K1<Either.T, S>>, EitherMonad<S> {
+  override fun <A, B> liftA(f: (A) -> B): (K1<K1<Either.T, S>, A>) -> Either<S, B> {
     return { a -> Either.narrow(a) ap Either.pure(f) }
   }
 
-  override fun <A, B, C> liftA2(f: (A, B) -> C): (K1<K1<Either.µ, S>, A>, K1<K1<Either.µ, S>, B>) -> Either<S, C> {
+  override fun <A, B, C> liftA2(f: (A, B) -> C): (K1<K1<Either.T, S>, A>, K1<K1<Either.T, S>, B>) -> Either<S, C> {
     return { a1, a2 ->
       val i1 = Either.narrow(a1)
       val i2 = Either.narrow(a2)
@@ -17,7 +17,7 @@ interface EitherApplicativeOps<S>: ApplicativeOps<K1<Either.µ, S>>, EitherMonad
     }
   }
 
-  override fun <A, B, C, D> liftA3(f: (A, B, C) -> D): (K1<K1<Either.µ, S>, A>, K1<K1<Either.µ, S>, B>, K1<K1<Either.µ, S>, C>) -> Either<S, D> {
+  override fun <A, B, C, D> liftA3(f: (A, B, C) -> D): (K1<K1<Either.T, S>, A>, K1<K1<Either.T, S>, B>, K1<K1<Either.T, S>, C>) -> Either<S, D> {
     return { a1, a2, a3 ->
       val i1 = Either.narrow(a1)
       val i2 = Either.narrow(a2)
