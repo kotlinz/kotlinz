@@ -1,6 +1,7 @@
 # Kotlinz
 
 [![](https://jitpack.io/v/unhappychoice/kotlinz.svg)](https://jitpack.io/#unhappychoice/kotlinz)
+[![Circle CI](https://circleci.com/gh/unhappychoice/kotlinz.svg?style=svg)](https://circleci.com/gh/unhappychoice/kotlinz)
 
 Kotlinz is a library for functional programming.
 
@@ -16,8 +17,8 @@ allprojects {
     }
 }
 
-dependencies {
-    compile 'com.github.unhappychoice:kotlinz:0.1.1'
+dependencies { 
+    compile 'com.github.unhappychoice:kotlinz:$version'
 }
 ```
 
@@ -34,11 +35,9 @@ dependencies {
 <dependency>
     <groupId>com.github.unhappychoice</groupId>
     <artifactId>kotlinz</artifactId>
-    <version>0.1.1</version>
+    <version>$version</version>
 </dependency>
 ```
-
-### Gradle
 
 ## Related
 - [Scalaz](https://github.com/scalaz/scalaz)
