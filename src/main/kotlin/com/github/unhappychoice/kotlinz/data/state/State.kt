@@ -7,11 +7,11 @@ class State<S, A>(val value: (S) -> Pair<A, S>): K2<State.µ, S, A> {
   class µ {}
 
   companion object {
-    fun <S, A> narrow(v: K1<K1<µ, S>, A>) = v as State<S, A>
+    fun <S, A> narrow(v: K1<K1<State.µ, S>, A>) = v as State<S, A>
 
     // Monad
     fun <S, A> pure(v: A): State<S, A> = monad<S>().pure(v)
-    fun <S, A> join(v: K1<K1<µ, S>, K1<K1<µ, S>, A>>): State<S, A> = monad<S>().join(v)
+    fun <S, A> join(v: K1<K1<State.µ, S>, K1<K1<State.µ, S>, A>>): State<S, A> = monad<S>().join(v)
     private fun <S> monad() = object: StateMonad<S> {}
 
     // ApplicativeOps
