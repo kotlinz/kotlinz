@@ -18,7 +18,7 @@ allprojects {
 }
 
 dependencies { 
-    compile 'com.github.unhappychoice:kotlinz:$version'
+    compile 'com.github.kotlinz:kotlinz:$version'
 }
 ```
 
@@ -33,7 +33,7 @@ dependencies {
 </repositories>
 
 <dependency>
-    <groupId>com.github.unhappychoice</groupId>
+    <groupId>com.github.kotlinz</groupId>
     <artifactId>kotlinz</artifactId>
     <version>$version</version>
 </dependency>
