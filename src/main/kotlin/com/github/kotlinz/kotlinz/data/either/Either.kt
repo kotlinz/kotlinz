@@ -35,4 +35,12 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
   infix fun <S> ap(f: Either<L, (R) -> S>): Either<L, S> = monad.ap(f, this)
   infix fun <S> bind(f: (R) -> Either<L, S>): Either<L, S> = monad.bind(f, this)
   private val monad = object: EitherMonad<L> {}
+
+  override fun equals(other: Any?): Boolean {
+    return when {
+      this is Left && other is Left<*, *> -> this.value == other.value
+      this is Right && other is Right<*, *> -> this.value == other.value
+      else -> false
+    }
+  }
 }
