@@ -1,0 +1,18 @@
+machine:
+  java:
+    version: oraclejdk8
+
+dependencies:
+  pre:
+    - chmod +x ./gradlew
+  override:
+    - ./gradlew assemble testClasses
+  cache_directories:
+    - build
+
+test:
+  override:
+    - ./gradlew test jacocoJunitPlatformTestReport
+    - cp -r build/test-results $CIRCLE_ARTIFACTS
+    - cp -r build/reports $CIRCLE_ARTIFACTS
+    - bash <(curl -s https://codecov.io/bash)

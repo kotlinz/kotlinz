@@ -1,5 +1,5 @@
 buildscript {
-    ext.kotlin_version = '1.0.1-2'
+    ext.kotlin_version = '1.0.5'
 
     repositories {
         jcenter()
@@ -19,6 +19,7 @@ plugins {
 apply plugin: 'kotlin'
 apply plugin: 'maven'
 apply plugin: 'org.junit.platform.gradle.plugin'
+apply plugin: 'jacoco'
 
 scmVersion {
     tag {
@@ -48,4 +49,26 @@ dependencies {
     testCompile 'org.jetbrains.spek:spek-api:1.1.0-beta3'
     testCompile "com.winterbe:expekt:0.5.0"
     testRuntime 'org.jetbrains.spek:spek-junit-platform-engine:1.1.0-beta3'
+}
+
+project.afterEvaluate {
+    def junitPlatformTestTask = project.tasks.getByName('junitPlatformTest')
+
+    jacoco {
+        // this tool version is compatible with
+        toolVersion = "0.7.6.201602180812"
+        applyTo junitPlatformTestTask
+    }
+
+    project.task(type: JacocoReport, "jacocoJunitPlatformTestReport",
+            {
+                sourceDirectories = files("./src/main")
+                classDirectories = files("$buildDir/classes/main")
+                executionData junitPlatformTestTask
+                reports {
+                    xml.enabled true
+                    csv.enabled false
+                    html.enabled true
+                }
+            })
 }
