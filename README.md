@@ -2,6 +2,7 @@
 
 [![](https://jitpack.io/v/kotlinz/kotlinz.svg)](https://jitpack.io/#kotlinz/kotlinz)
 [![CircleCI](https://circleci.com/gh/kotlinz/kotlinz.svg?style=svg)](https://circleci.com/gh/kotlinz/kotlinz)
+[![codecov](https://codecov.io/gh/kotlinz/kotlinz/branch/master/graph/badge.svg)](https://codecov.io/gh/kotlinz/kotlinz)
 
 Kotlinz is a library for functional programming.
 
