@@ -42,4 +42,12 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
       is None -> v
     }
   }
+
+  override fun equals(other: Any?): Boolean {
+    return when {
+      this is Just && other is Maybe.Just<*> -> this.value == other.value
+      this is None && other is Maybe.None<*> -> true
+      else -> false
+    }
+  }
 }
