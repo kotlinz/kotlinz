@@ -11,8 +11,8 @@ interface StateApplicative<S>: Applicative<K1<State.T, S>> {
     val statef = State.narrow(f)
 
     return State { s ->
-      val (value, s2) = statef.value(s)
-      State.narrow(fmap(value, state)).value(s2)
+      val (value, s2) = statef.run(s)
+      State.narrow(fmap(value, state)).run(s2)
     }
   }
 

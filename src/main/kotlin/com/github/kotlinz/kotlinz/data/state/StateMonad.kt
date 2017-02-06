@@ -7,8 +7,8 @@ interface StateMonad<S>: Monad<K1<State.T, S>>, StateApplicative<S>, StateFuncto
   override fun <A> join(v: K1<K1<State.T, S>, K1<K1<State.T, S>, A>>): State<S, A> {
     val state = State.narrow(v)
     return State { s ->
-      val (value, s2) = state.value(s)
-      State.Companion.narrow(value).value(s2)
+      val (value, s2) = state.run(s)
+      State.Companion.narrow(value).run(s2)
     }
   }
 
