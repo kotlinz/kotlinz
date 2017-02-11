@@ -3,8 +3,8 @@ package com.github.kotlinz.kotlinz.data.state
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 
-class State<S, A>(val value: (S) -> Pair<A, S>): K2<State.T, S, A> {
-  class T {}
+class State<S, A>(val run: (S) -> Pair<A, S>): K2<State.T, S, A> {
+  class T
 
   companion object {
     fun <S, A> narrow(v: K1<K1<T, S>, A>) = v as State<S, A>
@@ -33,8 +33,8 @@ class State<S, A>(val value: (S) -> Pair<A, S>): K2<State.T, S, A> {
   infix fun <B> bind(f: (A) -> State<S, B>): State<S, B> = monad.bind(f, this)
   private val monad = object: StateMonad<S> {}
 
-  fun eval(s: S): A = value(s).first
-  fun exec(s: S): S = value(s).second
+  fun eval(s: S): A = run(s).first
+  fun exec(s: S): S = run(s).second
 }
 
 fun <S> get(): State<S, S> = State { Pair(it, it) }

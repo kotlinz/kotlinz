@@ -3,7 +3,7 @@ package com.github.kotlinz.kotlinz.data.identity
 import com.github.kotlinz.kotlinz.K1
 
 data class Identity<A>(val value: A): K1<Identity.T, A> {
-  class T {}
+  class T
 
   companion object {
     fun <A> narrow(i: K1<T, A>): Identity<A> = i as Identity<A>

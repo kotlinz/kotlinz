@@ -4,7 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 
 sealed class Maybe<A>: K1<Maybe.T, A> {
 
-  class T {}
+  class T
 
   class None<A>: Maybe<A>()
   class Just<A>(val value: A): Maybe<A>()

@@ -4,7 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 
 sealed class Either<L, R>: K2<Either.T, L, R> {
-  class T {}
+  class T
 
   class Left<L, R>(val value: L): Either<L, R>()
   class Right<L, R>(val value: R): Either<L, R>()
