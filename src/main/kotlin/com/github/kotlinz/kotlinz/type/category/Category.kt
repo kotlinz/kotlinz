@@ -1,5 +1,7 @@
 package com.github.kotlinz.kotlinz.type.category
 
-interface Category<T> : Compose<T> {
-    fun <A> id(a: A): A = a
+import com.github.kotlinz.kotlinz.K3
+
+interface Category<T, F> : Compose<T, F> {
+    fun <A> id(): K3<T, F, A, A>
 }
