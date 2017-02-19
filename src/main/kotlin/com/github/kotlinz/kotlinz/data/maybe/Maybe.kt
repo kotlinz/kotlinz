@@ -13,7 +13,7 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
     fun <A> narrow(v: K1<T, A>): Maybe<A> = v as Maybe<A>
 
     // Monad
-    fun <A> pure(f: A): Maybe<A> = (object: MaybeMonad {}).pure(f)
+    fun <A> pure(f: A): Maybe<A> = monad.pure(f)
     fun <A> join(v: K1<T, K1<T, A>>): Maybe<A> = monad.join(v)
     private val monad = object: MaybeMonad {}
 
