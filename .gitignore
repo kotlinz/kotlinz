@@ -1,1 +1,6 @@
 src/main/kotlin/com/github/kotlinz/kotlinz/Main.kt
+build/
+.gradle/
+.kotlin/
+.idea/
+*.iml
