@@ -1,11 +1,9 @@
 package com.github.kotlinz.kotlinz.data.monoid
 
 import com.github.kotlinz.kotlinz.law.MonoidLaw
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
+import io.kotest.core.spec.style.DescribeSpec
 
-object AnyMonoidTest : Spek({
+class AnyMonoidTest : DescribeSpec({
     describe("Any Monoid") {
         val law = MonoidLaw(AnyMonoid::class.java)
         it("should satisfy laws") { law.assertSatisfyingMonoidLaw(true.toAnyMonoid(), true.toAnyMonoid(), false.toAnyMonoid()) }

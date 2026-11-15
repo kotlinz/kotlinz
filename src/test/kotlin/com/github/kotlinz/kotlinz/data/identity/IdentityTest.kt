@@ -1,12 +1,9 @@
 package com.github.kotlinz.kotlinz.data.identity
 
 import com.github.kotlinz.kotlinz.law.MonadLaw
-import org.jetbrains.spek.api.Spek
-import org.jetbrains.spek.api.dsl.context
-import org.jetbrains.spek.api.dsl.describe
-import org.jetbrains.spek.api.dsl.it
+import io.kotest.core.spec.style.DescribeSpec
 
-object IdentityTest : Spek({
+class IdentityTest : DescribeSpec({
     describe("Identity") {
         context("as Monad") {
             val law = MonadLaw(object : IdentityMonad {})

@@ -2,7 +2,7 @@ package com.github.kotlinz.kotlinz.law
 
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Monad
-import com.winterbe.expekt.expect
+import io.kotest.matchers.booleans.shouldBeTrue
 
 class MonadLaw<T>(val monad: Monad<T>) {
     fun <V> leftIdentity(v: V, f: (V) -> K1<T, V>): Boolean =
@@ -20,9 +20,9 @@ class MonadLaw<T>(val monad: Monad<T>) {
         val f = { m: T -> monad.pure(m) }
         val g = { m: T -> monad.pure(m) }
 
-        expect(rightIdentity(mv)).to.be.`true`
-        expect(leftIdentity(v, f)).to.be.`true`
-        expect(associativity(mv, f, g)).to.be.`true`
+        rightIdentity(mv).shouldBeTrue()
+        leftIdentity(v, f).shouldBeTrue()
+        associativity(mv, f, g).shouldBeTrue()
     }
 }
 
