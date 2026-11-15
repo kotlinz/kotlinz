@@ -1,0 +1,47 @@
+package com.github.kotlinz.kotlinz.data.nonemptylist
+
+import com.github.kotlinz.kotlinz.K1
+
+data class NonEmptyList<A>(val head: A, val tail: List<A>): K1<NonEmptyList.T, A> {
+  class T
+
+  companion object {
+    fun <A> narrow(v: K1<T, A>): NonEmptyList<A> = v as NonEmptyList<A>
+
+    // Monad
+    fun <A> pure(v: A): NonEmptyList<A> = monad.pure(v)
+    fun <A> join(v: K1<T, K1<T, A>>): NonEmptyList<A> = monad.join(v)
+    private val monad = object: NonEmptyListMonad {}
+
+    // ApplicativeOps
+    fun <A, B> liftA(f: (A) -> B) = applicativeOps.liftA(f)
+    fun <A, B, C> liftA2(f: (A, B) -> C) = applicativeOps.liftA2(f)
+    fun <A, B, C, D> liftA3(f: (A, B, C) -> D) = applicativeOps.liftA3(f)
+    private val applicativeOps = object: NonEmptyListApplicativeOps {}
+
+    // MonadOps
+    fun <A, B> liftM(f: (A) -> B) = monadOps.liftM(f)
+    fun <A, B, C> liftM2(f: (A,  B) -> C) =  monadOps.liftM2(f)
+    fun <A, B, C, D> liftM3(f: (A, B, C) -> D) =  monadOps.liftM3(f)
+    private val monadOps = object: NonEmptyListMonadOps {}
+
+    fun <A> fromList(list: List<A>): NonEmptyList<A>? = list.firstOrNull()?.let { NonEmptyList(it, list.drop(1)) }
+  }
+
+  // Monad
+  infix fun <B> fmap(f: (A) -> B): NonEmptyList<B> = monad.fmap(f, this)
+  infix fun <B> ap(f: K1<T, (A) -> B>): NonEmptyList<B> = monad.ap(f, this)
+  infix fun <B> bind(f: (A) -> K1<T, B>): NonEmptyList<B> = monad.bind(f, this)
+  private val monad = object: NonEmptyListMonad {}
+
+  // Comonad
+  fun extract(): A = comonad.extract(this)
+  fun duplicate(): NonEmptyList<K1<T, A>> = comonad.duplicate(this)
+  fun <B> extend(f: (K1<T, A>) -> B): NonEmptyList<B> = comonad.extend(f, this)
+  private val comonad = object: NonEmptyListComonad {}
+
+  fun toList(): List<A> = listOf(head) + tail
+  operator fun plus(other: NonEmptyList<A>): NonEmptyList<A> = NonEmptyList(head, tail + other.toList())
+}
+
+fun <A> nonEmptyListOf(head: A, vararg tail: A): NonEmptyList<A> = NonEmptyList(head, tail.toList())
