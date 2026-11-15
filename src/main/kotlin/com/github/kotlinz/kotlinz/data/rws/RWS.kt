@@ -3,6 +3,8 @@ package com.github.kotlinz.kotlinz.data.rws
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.K4
+import com.github.kotlinz.kotlinz.syntax.MonadScope
+import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
 class RWS<R, W: Monoid<*, W>, S, A>(val type: Class<W>, val run: (R, S) -> Triple<A, S, W>): K4<RWS.T, R, W, S, A> {
@@ -15,6 +17,7 @@ class RWS<R, W: Monoid<*, W>, S, A>(val type: Class<W>, val run: (R, S) -> Tripl
     fun <R, W: Monoid<*, W>, S, A> pure(type: Class<W>, v: A): RWS<R, W, S, A> = monad<R, W, S>(type).pure(v)
     fun <R, W: Monoid<*, W>, S, A> join(type: Class<W>, v: K1<K3<T, R, W, S>, K1<K3<T, R, W, S>, A>>): RWS<R, W, S, A> = monad<R, W, S>(type).join(v)
     private fun <R, W: Monoid<*, W>, S> monad(type: Class<W>) = object: RWSMonad<R, W, S> { override val type = type }
+    fun <R, W: Monoid<*, W>, S, A> fx(type: Class<W>, block: suspend MonadScope<K3<T, R, W, S>>.() -> A): RWS<R, W, S, A> = narrow(monad<R, W, S>(type).fx(block))
 
     // ApplicativeOps
     fun <R, W: Monoid<*, W>, S, A, B> liftA(type: Class<W>, f: (A) -> B) = applicativeOps<R, W, S>(type).liftA(f)

@@ -2,6 +2,8 @@ package com.github.kotlinz.kotlinz.data.state
 
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
+import com.github.kotlinz.kotlinz.syntax.MonadScope
+import com.github.kotlinz.kotlinz.syntax.fx
 
 class State<S, A>(val run: (S) -> Pair<A, S>): K2<State.T, S, A> {
   class T
@@ -13,6 +15,7 @@ class State<S, A>(val run: (S) -> Pair<A, S>): K2<State.T, S, A> {
     fun <S, A> pure(v: A): State<S, A> = monad<S>().pure(v)
     fun <S, A> join(v: K1<K1<T, S>, K1<K1<T, S>, A>>): State<S, A> = monad<S>().join(v)
     private fun <S> monad() = object: StateMonad<S> {}
+    fun <S, A> fx(block: suspend MonadScope<K1<T, S>>.() -> A): State<S, A> = narrow(monad<S>().fx(block))
 
     // ApplicativeOps
     fun <S, A, B> liftA(f: (A) -> B) = applicativeOps<S>().liftA(f)

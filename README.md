@@ -51,6 +51,20 @@ dependencies {
 </dependency>
 ```
 
+## Monad comprehension
+
+`fx` provides Haskell `do` / Scala `for` style syntax built on Kotlin coroutines:
+
+```kotlin
+val result: Maybe<Int> = Maybe.fx {
+    val a = Maybe.Just(1).bind()
+    val b = Maybe.Just(2).bind()
+    a + b
+} // Just(3)
+```
+
+It is available on the companions of Identity, Maybe, Either, Try, Eval, IO, Reader, Writer, State and RWS, and as `Monad<T>.fx` for any monad that calls the continuation passed to `bind` at most once per run.
+
 ## Related
 - [Scalaz](https://github.com/scalaz/scalaz)
 - [Swiftz](https://github.com/typelift/Swiftz)
