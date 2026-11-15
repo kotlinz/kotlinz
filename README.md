@@ -65,6 +65,16 @@ val result: Maybe<Int> = Maybe.fx {
 
 It is available on the companions of Identity, Maybe, Either, Try, Eval, IO, Reader, Writer, State and RWS, and as `Monad<T>.fx` for any monad that calls the continuation passed to `bind` at most once per run.
 
+For monads that call the continuation several times (ListK, NonEmptyList), `fx` on their companions uses `Monad<T>.fxReplay`, which re-runs the block from the start for every bound value. Code between binds may therefore run more than once:
+
+```kotlin
+val pairs: ListK<String> = ListK.fx {
+    val a = listKOf(1, 2).bind()
+    val b = listKOf("x", "y").bind()
+    "$a$b"
+} // ListK(1x, 1y, 2x, 2y)
+```
+
 ## Related
 - [Scalaz](https://github.com/scalaz/scalaz)
 - [Swiftz](https://github.com/typelift/Swiftz)
