@@ -1,25 +1,36 @@
 # Kotlinz
 
 [![](https://jitpack.io/v/kotlinz/kotlinz.svg)](https://jitpack.io/#kotlinz/kotlinz)
-[![CircleCI](https://circleci.com/gh/kotlinz/kotlinz.svg?style=shield)](https://circleci.com/gh/kotlinz/kotlinz)
+[![CI](https://github.com/kotlinz/kotlinz/actions/workflows/ci.yml/badge.svg)](https://github.com/kotlinz/kotlinz/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/kotlinz/kotlinz/branch/master/graph/badge.svg)](https://codecov.io/gh/kotlinz/kotlinz)
 
 Kotlinz is a library for functional programming.
 
 ## Dependency
 
-### Gradle
+### Gradle (Kotlin DSL)
 
-```groovy
-allprojects {
-    repositories {
-    ...
-    maven { url "https://jitpack.io" }
-    }
+```kotlin
+repositories {
+    mavenCentral()
+    maven("https://jitpack.io")
 }
 
-dependencies { 
-    compile 'com.github.kotlinz:kotlinz:$version'
+dependencies {
+    implementation("com.github.kotlinz:kotlinz:$version")
+}
+```
+
+### Gradle (Groovy DSL)
+
+```groovy
+repositories {
+    mavenCentral()
+    maven { url "https://jitpack.io" }
+}
+
+dependencies {
+    implementation "com.github.kotlinz:kotlinz:$version"
 }
 ```
 
