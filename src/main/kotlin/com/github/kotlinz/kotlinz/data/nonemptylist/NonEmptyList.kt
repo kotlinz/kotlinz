@@ -1,6 +1,8 @@
 package com.github.kotlinz.kotlinz.data.nonemptylist
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.syntax.MonadScope
+import com.github.kotlinz.kotlinz.syntax.fxReplay
 
 data class NonEmptyList<A>(val head: A, val tail: List<A>): K1<NonEmptyList.T, A> {
   class T
@@ -12,6 +14,7 @@ data class NonEmptyList<A>(val head: A, val tail: List<A>): K1<NonEmptyList.T, A
     fun <A> pure(v: A): NonEmptyList<A> = monad.pure(v)
     fun <A> join(v: K1<T, K1<T, A>>): NonEmptyList<A> = monad.join(v)
     private val monad = object: NonEmptyListMonad {}
+    fun <A> fx(block: suspend MonadScope<T>.() -> A): NonEmptyList<A> = narrow(monad.fxReplay(block))
 
     // ApplicativeOps
     fun <A, B> liftA(f: (A) -> B) = applicativeOps.liftA(f)
