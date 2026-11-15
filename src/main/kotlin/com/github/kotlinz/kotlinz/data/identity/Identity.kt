@@ -1,6 +1,8 @@
 package com.github.kotlinz.kotlinz.data.identity
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.syntax.MonadScope
+import com.github.kotlinz.kotlinz.syntax.fx
 
 data class Identity<A>(val value: A): K1<Identity.T, A> {
   class T
@@ -12,6 +14,7 @@ data class Identity<A>(val value: A): K1<Identity.T, A> {
     fun <A> pure(v: A): Identity<A> = monad.pure(v)
     fun <A> join(v: K1<T, K1<T, A>>): Identity<A> = monad.join(v)
     private val monad = object: IdentityMonad {}
+    fun <A> fx(block: suspend MonadScope<T>.() -> A): Identity<A> = narrow(monad.fx(block))
 
     // ApplicativeOps1
     fun <A, B> liftA(f: (A) -> B) = applicativeOps.liftA(f)

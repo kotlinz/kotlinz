@@ -2,6 +2,8 @@ package com.github.kotlinz.kotlinz.data.either
 
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
+import com.github.kotlinz.kotlinz.syntax.MonadScope
+import com.github.kotlinz.kotlinz.syntax.fx
 
 sealed class Either<L, R>: K2<Either.T, L, R> {
   class T
@@ -16,6 +18,7 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
     fun <L, S> pure(v: S): Either<L, S> = monad<L>().pure(v)
     fun <L, S> join(v: K1<K1<T, L>, K1<K1<T, L>, S>>): Either<L, S> = monad<L>().join(v)
     private fun <L> monad() = object: EitherMonad<L> {}
+    fun <L, R> fx(block: suspend MonadScope<K1<T, L>>.() -> R): Either<L, R> = narrow(monad<L>().fx(block))
 
     // ApplicativeOps
     fun <S, A, B> liftA(f: (A) -> B) = applicativeOps<S>().liftA(f)

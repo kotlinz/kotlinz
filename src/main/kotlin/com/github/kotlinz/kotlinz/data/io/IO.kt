@@ -1,6 +1,8 @@
 package com.github.kotlinz.kotlinz.data.io
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.syntax.MonadScope
+import com.github.kotlinz.kotlinz.syntax.fx
 
 class IO<A>(private val run: () -> A): K1<IO.T, A> {
   class T
@@ -12,6 +14,7 @@ class IO<A>(private val run: () -> A): K1<IO.T, A> {
     fun <A> pure(v: A): IO<A> = monad.pure(v)
     fun <A> join(v: K1<T, K1<T, A>>): IO<A> = monad.join(v)
     private val monad = object: IOMonad {}
+    fun <A> fx(block: suspend MonadScope<T>.() -> A): IO<A> = narrow(monad.fx(block))
 
     // ApplicativeOps
     fun <A, B> liftA(f: (A) -> B) = applicativeOps.liftA(f)

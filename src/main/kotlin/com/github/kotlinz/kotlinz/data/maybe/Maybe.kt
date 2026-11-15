@@ -1,6 +1,8 @@
 package com.github.kotlinz.kotlinz.data.maybe
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.syntax.MonadScope
+import com.github.kotlinz.kotlinz.syntax.fx
 
 sealed class Maybe<A>: K1<Maybe.T, A> {
 
@@ -16,6 +18,7 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
     fun <A> pure(f: A): Maybe<A> = monad.pure(f)
     fun <A> join(v: K1<T, K1<T, A>>): Maybe<A> = monad.join(v)
     private val monad = object: MaybeMonad {}
+    fun <A> fx(block: suspend MonadScope<T>.() -> A): Maybe<A> = narrow(monad.fx(block))
 
     // ApplicativeOps
     fun <A, B> liftA(f: (A) -> B) = applicativeOps.liftA(f)

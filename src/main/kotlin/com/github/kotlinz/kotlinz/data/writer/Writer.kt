@@ -2,6 +2,8 @@ package com.github.kotlinz.kotlinz.data.writer
 
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
+import com.github.kotlinz.kotlinz.syntax.MonadScope
+import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
 class Writer<W: Monoid<*, W>, A> (val type: Class<W>, val run: Pair<A, W>) : K2<Writer.T, W, A> {
@@ -14,6 +16,7 @@ class Writer<W: Monoid<*, W>, A> (val type: Class<W>, val run: Pair<A, W>) : K2<
         fun <W: Monoid<*, W>, A> pure(type: Class<W>, v: A): Writer<W, A> = monad(type).pure(v)
         fun <W: Monoid<*, W>, A> join(type: Class<W>, v: K1<K1<T, W>, K1<K1<T, W>, A>>): Writer<W, A> = monad(type).join(v)
         private fun <W: Monoid<*, W>> monad(type: Class<W>) = object: WriterMonad<W> { override val type = type }
+        fun <W: Monoid<*, W>, A> fx(type: Class<W>, block: suspend MonadScope<K1<T, W>>.() -> A): Writer<W, A> = narrow(monad(type).fx(block))
 
         // ApplicativeOps
         fun <W: Monoid<*, W>, A, B> liftA(type: Class<W>, f: (A) -> B) = applicativeOps(type).liftA(f)

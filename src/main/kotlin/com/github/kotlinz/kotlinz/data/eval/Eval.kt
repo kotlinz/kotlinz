@@ -1,6 +1,8 @@
 package com.github.kotlinz.kotlinz.data.eval
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.syntax.MonadScope
+import com.github.kotlinz.kotlinz.syntax.fx
 
 class Eval<A>(private val thunk: () -> A): K1<Eval.T, A> {
   class T
@@ -15,6 +17,7 @@ class Eval<A>(private val thunk: () -> A): K1<Eval.T, A> {
     fun <A> pure(v: A): Eval<A> = monad.pure(v)
     fun <A> join(v: K1<T, K1<T, A>>): Eval<A> = monad.join(v)
     private val monad = object: EvalMonad {}
+    fun <A> fx(block: suspend MonadScope<T>.() -> A): Eval<A> = narrow(monad.fx(block))
 
     // ApplicativeOps
     fun <A, B> liftA(f: (A) -> B) = applicativeOps.liftA(f)

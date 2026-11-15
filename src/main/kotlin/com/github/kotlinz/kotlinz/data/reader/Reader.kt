@@ -2,6 +2,8 @@ package com.github.kotlinz.kotlinz.data.reader
 
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
+import com.github.kotlinz.kotlinz.syntax.MonadScope
+import com.github.kotlinz.kotlinz.syntax.fx
 
 class Reader<R, A>(val run: (R) -> A) : K2<Reader.T, R, A> {
     class T
@@ -13,6 +15,7 @@ class Reader<R, A>(val run: (R) -> A) : K2<Reader.T, R, A> {
         fun <S, A> pure(v: A): Reader<S, A> = monad<S>().pure(v)
         fun <S, A> join(v: K1<K1<T, S>, K1<K1<T, S>, A>>): Reader<S, A> = monad<S>().join(v)
         private fun <S> monad() = object: ReaderMonad<S> {}
+        fun <S, A> fx(block: suspend MonadScope<K1<T, S>>.() -> A): Reader<S, A> = narrow(monad<S>().fx(block))
 
         // ApplicativeOps
         fun <S, A, B> liftA(f: (A) -> B) = applicativeOps<S>().liftA(f)
