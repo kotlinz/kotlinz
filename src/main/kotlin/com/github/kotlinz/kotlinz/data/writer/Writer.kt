@@ -46,5 +46,11 @@ class Writer<W: Monoid<*, W>, A> (val type: Class<W>, val run: Pair<A, W>) : K2<
     fun listen(): Writer<W, Pair<A, W>> = monadWriter.listen(this)
     infix fun censor(f: (W) -> W): Writer<W, A> = narrow(monadWriter.censor(f, this))
     private val monadWriter = object: WriterMonadWriter<W> { override val type = this@Writer.type }
+
+    // Bifunctor
+    fun <V: Monoid<*, V>, B> bimap(f: (W) -> V, g: (A) -> B): Writer<V, B> = narrow(bifunctor.bimap(f, g, this))
+    infix fun <V: Monoid<*, V>> first(f: (W) -> V): Writer<V, A> = narrow(bifunctor.first(f, this))
+    infix fun <B> second(g: (A) -> B): Writer<W, B> = narrow(bifunctor.second(g, this))
+    private val bifunctor = object: WriterBifunctor {}
 }
 
