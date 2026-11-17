@@ -25,4 +25,10 @@ class Kleisli<F, A, B>(val monad: Monad<F>, val run: (A) -> K1<F, B>) : K3<Kleis
     fun <C>combine(g: K3<T, F, A, C>): K3<T, F, A, Pair<B, C>> = arrow().combine(this, g)
 
     private fun arrow() = object: KleisliArrow<F> { override val monad = this@Kleisli.monad }
+
+    fun <Z, C> dimap(f: (Z) -> A, g: (B) -> C): Kleisli<F, Z, C> = profunctor().dimap(f, g, this)
+    infix fun <Z> lmap(f: (Z) -> A): Kleisli<F, Z, B> = profunctor().lmap(f, this)
+    infix fun <C> rmap(g: (B) -> C): Kleisli<F, A, C> = profunctor().rmap(g, this)
+
+    private fun profunctor() = object: KleisliProfunctor<F> { override val monad = this@Kleisli.monad }
 }
