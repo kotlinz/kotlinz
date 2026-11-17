@@ -1,6 +1,7 @@
 package com.github.kotlinz.kotlinz.data.io
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 
@@ -27,6 +28,10 @@ class IO<A>(private val run: () -> A): K1<IO.T, A> {
     fun <A, B, C> liftM2(f: (A, B) -> C) = monadOps.liftM2(f)
     fun <A, B, C, D> liftM3(f: (A, B, C) -> D) = monadOps.liftM3(f)
     private val monadOps = object: IOMonadOps {}
+
+    // MonadError
+    fun <A> raiseError(e: Throwable): IO<A> = monadError.raiseError(e)
+    private val monadError = object: IOMonadError {}
   }
 
   // Monad
@@ -34,6 +39,12 @@ class IO<A>(private val run: () -> A): K1<IO.T, A> {
   infix fun <B> ap(f: IO<(A) -> B>): IO<B> = monad.ap(f, this)
   infix fun <B> bind(f: (A) -> IO<B>): IO<B> = monad.bind(f, this)
   private val monad = object: IOMonad {}
+
+  // MonadError
+  infix fun handleErrorWith(f: (Throwable) -> IO<A>): IO<A> = monadError.handleErrorWith(f, this)
+  infix fun handleError(f: (Throwable) -> A): IO<A> = narrow(monadError.handleError(f, this))
+  fun attempt(): IO<Either<Throwable, A>> = narrow(monadError.attempt(this))
+  private val monadError = object: IOMonadError {}
 
   fun unsafeRun(): A = run()
 }
