@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.kleisli
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.K3
+import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
 class Kleisli<F, A, B>(val monad: Monad<F>, val run: (A) -> K1<F, B>) : K3<Kleisli.T, F, A, B> {
@@ -30,5 +31,9 @@ class Kleisli<F, A, B>(val monad: Monad<F>, val run: (A) -> K1<F, B>) : K3<Kleis
     infix fun <Z> lmap(f: (Z) -> A): Kleisli<F, Z, B> = profunctor().lmap(f, this)
     infix fun <C> rmap(g: (B) -> C): Kleisli<F, A, C> = profunctor().rmap(g, this)
 
+    fun <C> left(): Kleisli<F, Either<A, C>, Either<B, C>> = choice().left(this)
+    fun <C> right(): Kleisli<F, Either<C, A>, Either<C, B>> = choice().right(this)
+
     private fun profunctor() = object: KleisliProfunctor<F> { override val monad = this@Kleisli.monad }
+    private fun choice() = object: KleisliChoice<F> { override val monad = this@Kleisli.monad }
 }
