@@ -29,6 +29,11 @@ class Writer<W: Monoid<*, W>, A> (val type: Class<W>, val run: Pair<A, W>) : K2<
         fun <W: Monoid<*, W>, A, B, C> liftM2(type: Class<W>, f: (A,  B) -> C) =  monadOps(type).liftM2(f)
         fun <W: Monoid<*, W>, A, B, C, D> liftM3(type: Class<W>, f: (A, B, C) -> D) =  monadOps(type).liftM3(f)
         private fun <W: Monoid<*, W>> monadOps(type: Class<W>) = object: WriterMonadOps<W> { override val type = type }
+
+        // MonadWriter
+        fun <W: Monoid<*, W>, A> writer(type: Class<W>, v: Pair<A, W>): Writer<W, A> = monadWriter(type).writer(v)
+        fun <W: Monoid<*, W>> tell(type: Class<W>, w: W): Writer<W, Unit> = monadWriter(type).tell(w)
+        private fun <W: Monoid<*, W>> monadWriter(type: Class<W>) = object: WriterMonadWriter<W> { override val type = type }
     }
 
     // Monad
@@ -36,5 +41,10 @@ class Writer<W: Monoid<*, W>, A> (val type: Class<W>, val run: Pair<A, W>) : K2<
     infix fun <B> ap(f: Writer<W, (A) -> B>): Writer<W, B> = monad.ap(f, this)
     infix fun <B> bind(f: (A) -> Writer<W, B>): Writer<W, B> = monad.bind(f, this)
     private val monad = object: WriterMonad<W> { override val type = this@Writer.type }
+
+    // MonadWriter
+    fun listen(): Writer<W, Pair<A, W>> = monadWriter.listen(this)
+    infix fun censor(f: (W) -> W): Writer<W, A> = narrow(monadWriter.censor(f, this))
+    private val monadWriter = object: WriterMonadWriter<W> { override val type = this@Writer.type }
 }
 
