@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.maybe
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
+import com.github.kotlinz.kotlinz.type.group.Monoid
 
 sealed class Maybe<A>: K1<Maybe.T, A> {
 
@@ -38,6 +39,12 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
   infix fun <B> ap(f: K1<T, (A) -> B>): Maybe<B> = monad.ap(f, this)
   infix fun <B> bind(f: (A) -> K1<T, B>): Maybe<B> = monad.bind(f, this)
   private val monad = object: MaybeMonad {}
+
+  // Foldable
+  fun <B> foldl(initial: B, f: (B, A) -> B): B = foldable.foldl(initial, f, this)
+  fun <B> foldr(initial: B, f: (A, B) -> B): B = foldable.foldr(initial, f, this)
+  fun <M: Monoid<*, M>> foldMap(type: Class<M>, f: (A) -> M): M = foldable.foldMap(type, f, this)
+  private val foldable = object: MaybeFoldable {}
 
   fun getOrElse(v: A): A {
     return when (this) {
