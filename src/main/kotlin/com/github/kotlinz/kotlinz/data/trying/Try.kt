@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.trying
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
+import com.github.kotlinz.kotlinz.type.group.Monoid
 
 sealed class Try<A>: K1<Try.T, A> {
 
@@ -46,6 +47,12 @@ sealed class Try<A>: K1<Try.T, A> {
   infix fun <B> ap(f: K1<T, (A) -> B>): Try<B> = monad.ap(f, this)
   infix fun <B> bind(f: (A) -> K1<T, B>): Try<B> = monad.bind(f, this)
   private val monad = object: TryMonad {}
+
+  // Foldable
+  fun <B> foldl(initial: B, f: (B, A) -> B): B = foldable.foldl(initial, f, this)
+  fun <B> foldr(initial: B, f: (A, B) -> B): B = foldable.foldr(initial, f, this)
+  fun <M: Monoid<*, M>> foldMap(type: Class<M>, f: (A) -> M): M = foldable.foldMap(type, f, this)
+  private val foldable = object: TryFoldable {}
 
   fun getOrElse(v: A): A {
     return when (this) {

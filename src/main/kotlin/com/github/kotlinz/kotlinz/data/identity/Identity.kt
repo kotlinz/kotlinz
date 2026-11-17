@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.identity
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
+import com.github.kotlinz.kotlinz.type.group.Monoid
 
 data class Identity<A>(val value: A): K1<Identity.T, A> {
   class T
@@ -38,6 +39,12 @@ data class Identity<A>(val value: A): K1<Identity.T, A> {
   infix fun <B> ap(f: Identity<(A) -> B>): Identity<B> = monad.ap(f, this)
   infix fun <B> bind(f: (A) -> Identity<B>): Identity<B> = monad.bind(f, this)
   private val monad = object: IdentityMonad {}
+
+  // Foldable
+  fun <B> foldl(initial: B, f: (B, A) -> B): B = foldable.foldl(initial, f, this)
+  fun <B> foldr(initial: B, f: (A, B) -> B): B = foldable.foldr(initial, f, this)
+  fun <M: Monoid<*, M>> foldMap(type: Class<M>, f: (A) -> M): M = foldable.foldMap(type, f, this)
+  private val foldable = object: IdentityFoldable {}
 
   // MonadZip
   infix fun <B> mzip(m: K1<T, B>): Identity<Pair<A, B>> = monadZip.mzip(this, m)

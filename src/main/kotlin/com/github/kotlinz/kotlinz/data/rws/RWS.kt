@@ -42,6 +42,10 @@ class RWS<R, W: Monoid<*, W>, S, A>(val type: Class<W>, val run: (R, S) -> Tripl
     fun <R, W: Monoid<*, W>, S, A> writer(type: Class<W>, v: Pair<A, W>): RWS<R, W, S, A> = monadWriter<R, W, S>(type).writer(v)
     private fun <R, W: Monoid<*, W>, S> monadWriter(type: Class<W>) = object: RWSMonadWriter<R, W, S> { override val type = type }
 
+    // MonadState
+    fun <R, W: Monoid<*, W>, S, A> state(type: Class<W>, f: (S) -> Pair<A, S>): RWS<R, W, S, A> = monadState<R, W, S>(type).state(f)
+    private fun <R, W: Monoid<*, W>, S> monadState(type: Class<W>) = object: RWSMonadState<R, W, S> { override val type = type }
+
     // MonadReader
     fun <R, W: Monoid<*, W>, S, A> reader(type: Class<W>, f: (R) -> A): RWS<R, W, S, A> = narrow(monadReader<R, W, S>(type).reader(f))
     private fun <R, W: Monoid<*, W>, S> monadReader(type: Class<W>) = object: RWSMonadReader<R, W, S> { override val type = type }
