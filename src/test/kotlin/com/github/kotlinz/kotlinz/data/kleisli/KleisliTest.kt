@@ -4,6 +4,8 @@ import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.data.identity.Identity
 import com.github.kotlinz.kotlinz.data.identity.IdentityMonad
 import com.github.kotlinz.kotlinz.data.either.Either
+import com.github.kotlinz.kotlinz.law.ArrowApplyLaw
+import com.github.kotlinz.kotlinz.law.ArrowChoiceLaw
 import com.github.kotlinz.kotlinz.law.ChoiceLaw
 import com.github.kotlinz.kotlinz.law.ProfunctorLaw
 import com.github.kotlinz.kotlinz.law.StrongLaw
@@ -51,6 +53,38 @@ class KleisliTest : DescribeSpec({
                 k.left<String>().run(Either.Left(1)) shouldBe Identity(Either.Left<Int, String>(2))
                 k.left<String>().run(Either.Right("x")) shouldBe Identity(Either.Right<Int, String>("x"))
                 k.right<String>().run(Either.Right(1)) shouldBe Identity(Either.Right<String, Int>(2))
+            }
+        }
+
+        context("as ArrowChoice") {
+            val law = ArrowChoiceLaw(object : KleisliArrowChoice<Identity.T> { override val monad = monad }, ::observe)
+            val v = Kleisli(monad) { a: Int -> Identity(a * 10) }
+            val w = Kleisli(monad) { a: Int -> Identity(a - 4) }
+
+            it("should satisfy laws") { law.assertSatisfyingArrowChoiceLaw(v, w) }
+
+            it("should run the matching arrow with splitChoice") {
+                val k = v.splitChoice(Kleisli(monad) { s: String -> Identity(s.length) })
+                k.run(Either.Left(2)) shouldBe Identity(Either.Left<Int, Int>(20))
+                k.run(Either.Right("abc")) shouldBe Identity(Either.Right<Int, Int>(3))
+            }
+
+            it("should merge both branches with fanin") {
+                val k = v.fanin(Kleisli(monad) { s: String -> Identity(s.length) })
+                k.run(Either.Left(2)) shouldBe Identity(20)
+                k.run(Either.Right("abc")) shouldBe Identity(3)
+            }
+        }
+
+        context("as ArrowApply") {
+            val law = ArrowApplyLaw(object : KleisliArrowApply<Identity.T> { override val monad = monad }, ::observe)
+            val v = Kleisli(monad) { a: Int -> Identity(a * 10) }
+            val w = Kleisli(monad) { a: Int -> Identity(a - 4) }
+
+            it("should satisfy laws") { law.assertSatisfyingArrowApplyLaw(v, w) }
+
+            it("should apply the given arrow to the given input") {
+                Kleisli.app<Identity.T, Int, Int>(monad).run(Pair(v, 3)) shouldBe Identity(30)
             }
         }
     }
