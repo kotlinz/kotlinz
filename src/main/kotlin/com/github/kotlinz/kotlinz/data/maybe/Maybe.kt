@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.maybe
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
+import com.github.kotlinz.kotlinz.type.group.Monoid
 
 sealed class Maybe<A>: K1<Maybe.T, A> {
 
@@ -26,6 +27,14 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
     fun <A, B, C, D> liftA3(f: (A, B, C) -> D) = applicativeOps.liftA3(f)
     private val applicativeOps = object: MaybeApplicativeOps {}
 
+    // Alternative
+    fun <A> empty(): Maybe<A> = alternative.empty()
+    private val alternative = object: MaybeAlternative {}
+
+    // MonadPlus
+    fun <A> mzero(): Maybe<A> = monadPlus.mzero()
+    private val monadPlus = object: MaybeMonadPlus {}
+
     // MonadOps
     fun <A, B> liftM(f: (A) -> B) = monadOps.liftM(f)
     fun <A, B, C> liftM2(f: (A,  B) -> C) =  monadOps.liftM2(f)
@@ -39,12 +48,27 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
   infix fun <B> bind(f: (A) -> K1<T, B>): Maybe<B> = monad.bind(f, this)
   private val monad = object: MaybeMonad {}
 
+  // Foldable
+  fun <B> foldl(initial: B, f: (B, A) -> B): B = foldable.foldl(initial, f, this)
+  fun <B> foldr(initial: B, f: (A, B) -> B): B = foldable.foldr(initial, f, this)
+  fun <M: Monoid<*, M>> foldMap(type: Class<M>, f: (A) -> M): M = foldable.foldMap(type, f, this)
+  private val foldable = object: MaybeFoldable {}
+
   fun getOrElse(v: A): A {
     return when (this) {
       is Just -> this.value
       is None -> v
     }
   }
+
+  // Alternative
+  infix fun orElse(m: K1<T, A>): Maybe<A> = alternative.orElse(this, m)
+  fun optional(): Maybe<Maybe<A>> = narrow(alternative.optional(this))
+  private val alternative = object: MaybeAlternative {}
+
+  // MonadPlus
+  infix fun mplus(m: K1<T, A>): Maybe<A> = monadPlus.mplus(this, m)
+  private val monadPlus = object: MaybeMonadPlus {}
 
   override fun equals(other: Any?): Boolean {
     return when {

@@ -1,8 +1,10 @@
 package com.github.kotlinz.kotlinz.data.listk
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.data.maybe.Maybe
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fxReplay
+import com.github.kotlinz.kotlinz.type.group.Monoid
 
 data class ListK<A>(val value: List<A>): K1<ListK.T, A> {
   class T
@@ -21,6 +23,10 @@ data class ListK<A>(val value: List<A>): K1<ListK.T, A> {
     fun <A, B, C> liftA2(f: (A, B) -> C) = applicativeOps.liftA2(f)
     fun <A, B, C, D> liftA3(f: (A, B, C) -> D) = applicativeOps.liftA3(f)
     private val applicativeOps = object: ListKApplicativeOps {}
+
+    // Alternative
+    fun <A> empty(): ListK<A> = alternative.empty()
+    private val alternative = object: ListKAlternative {}
 
     // MonadOps
     fun <A, B> liftM(f: (A) -> B) = monadOps.liftM(f)
@@ -43,9 +49,20 @@ data class ListK<A>(val value: List<A>): K1<ListK.T, A> {
   infix fun <B> bind(f: (A) -> K1<T, B>): ListK<B> = monad.bind(f, this)
   private val monad = object: ListKMonad {}
 
+  // Foldable
+  fun <B> foldl(initial: B, f: (B, A) -> B): B = foldable.foldl(initial, f, this)
+  fun <B> foldr(initial: B, f: (A, B) -> B): B = foldable.foldr(initial, f, this)
+  fun <M: Monoid<*, M>> foldMap(type: Class<M>, f: (A) -> M): M = foldable.foldMap(type, f, this)
+  private val foldable = object: ListKFoldable {}
+
   // MonadPlus
   infix fun mplus(m: K1<T, A>): ListK<A> = monadPlus.mplus(this, m)
   private val monadPlus = object: ListKMonadPlus {}
+
+  // Alternative
+  infix fun orElse(m: K1<T, A>): ListK<A> = alternative.orElse(this, m)
+  fun optional(): ListK<Maybe<A>> = narrow(alternative.optional(this))
+  private val alternative = object: ListKAlternative {}
 
   // MonadZip
   infix fun <B> mzip(m: K1<T, B>): ListK<Pair<A, B>> = monadZip.mzip(this, m)
