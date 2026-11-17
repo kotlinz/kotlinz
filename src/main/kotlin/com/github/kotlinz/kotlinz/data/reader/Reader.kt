@@ -28,6 +28,11 @@ class Reader<R, A>(val run: (R) -> A) : K2<Reader.T, R, A> {
         fun <S, A, B, C> liftM2(f: (A,  B) -> C) =  monadOps<S>().liftM2(f)
         fun <S, A, B, C, D> liftM3(f: (A, B, C) -> D) =  monadOps<S>().liftM3(f)
         private fun <S> monadOps() = object: ReaderMonadOps<S> {}        
+
+        // MonadReader
+        fun <S> ask(): Reader<S, S> = monadReader<S>().ask()
+        fun <S, A> reader(f: (S) -> A): Reader<S, A> = monadReader<S>().reader(f)
+        private fun <S> monadReader() = object: ReaderMonadReader<S> {}
     }
 
     // Monad
