@@ -32,6 +32,10 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
     fun <S, A, B, C> liftM2(f: (A,  B) -> C) =  monadOps<S>().liftM2(f)
     fun <S, A, B, C, D> liftM3(f: (A, B, C) -> D) =  monadOps<S>().liftM3(f)
     private fun <S> monadOps() = object: EitherMonadOps<S> {}
+
+    // MonadError
+    fun <L, R> raiseError(e: L): Either<L, R> = monadError<L>().raiseError(e)
+    private fun <L> monadError() = object: EitherMonadError<L> {}
   }
 
   // Monad
@@ -39,6 +43,11 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
   infix fun <S> ap(f: Either<L, (R) -> S>): Either<L, S> = monad.ap(f, this)
   infix fun <S> bind(f: (R) -> Either<L, S>): Either<L, S> = monad.bind(f, this)
   private val monad = object: EitherMonad<L> {}
+
+  // MonadError
+  infix fun handleErrorWith(f: (L) -> Either<L, R>): Either<L, R> = monadError.handleErrorWith(f, this)
+  infix fun handleError(f: (L) -> R): Either<L, R> = narrow(monadError.handleError(f, this))
+  private val monadError = object: EitherMonadError<L> {}
 
   // Foldable
   fun <B> foldl(initial: B, f: (B, R) -> B): B = foldable.foldl(initial, f, this)
