@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.nonemptylist
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fxReplay
+import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
 data class NonEmptyList<A>(val head: A, val tail: List<A>): K1<NonEmptyList.T, A> {
@@ -30,6 +31,10 @@ data class NonEmptyList<A>(val head: A, val tail: List<A>): K1<NonEmptyList.T, A
     private val monadOps = object: NonEmptyListMonadOps {}
 
     fun <A> fromList(list: List<A>): NonEmptyList<A>? = list.firstOrNull()?.let { NonEmptyList(it, list.drop(1)) }
+
+    // Traversable
+    fun <G, A> sequence(applicative: Applicative<G>, v: K1<T, K1<G, A>>): K1<G, K1<T, A>> = traversable.sequence(applicative, v)
+    private val traversable = object: NonEmptyListTraversable {}
   }
 
   // Monad
@@ -43,6 +48,10 @@ data class NonEmptyList<A>(val head: A, val tail: List<A>): K1<NonEmptyList.T, A
   fun <B> foldr(initial: B, f: (A, B) -> B): B = foldable.foldr(initial, f, this)
   fun <M: Monoid<*, M>> foldMap(type: Class<M>, f: (A) -> M): M = foldable.foldMap(type, f, this)
   private val foldable = object: NonEmptyListFoldable {}
+
+  // Traversable
+  fun <G, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable.traverse(applicative, f, this)
+  private val traversable = object: NonEmptyListTraversable {}
 
   // Comonad
   fun extract(): A = comonad.extract(this)

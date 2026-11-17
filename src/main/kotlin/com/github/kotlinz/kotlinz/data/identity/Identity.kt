@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.identity
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
+import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
 data class Identity<A>(val value: A): K1<Identity.T, A> {
@@ -32,6 +33,10 @@ data class Identity<A>(val value: A): K1<Identity.T, A> {
     // MonadZip
     infix fun <A, B> munzip(m: K1<T, Pair<A, B>>): Pair<Identity<A>, Identity<B>> = monadZip.munzip(m)
     private val monadZip = object: IdentityMonadZip {}
+
+    // Traversable
+    fun <G, A> sequence(applicative: Applicative<G>, v: K1<T, K1<G, A>>): K1<G, K1<T, A>> = traversable.sequence(applicative, v)
+    private val traversable = object: IdentityTraversable {}
   }
 
   // Monad
@@ -45,6 +50,10 @@ data class Identity<A>(val value: A): K1<Identity.T, A> {
   fun <B> foldr(initial: B, f: (A, B) -> B): B = foldable.foldr(initial, f, this)
   fun <M: Monoid<*, M>> foldMap(type: Class<M>, f: (A) -> M): M = foldable.foldMap(type, f, this)
   private val foldable = object: IdentityFoldable {}
+
+  // Traversable
+  fun <G, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable.traverse(applicative, f, this)
+  private val traversable = object: IdentityTraversable {}
 
   // MonadZip
   infix fun <B> mzip(m: K1<T, B>): Identity<Pair<A, B>> = monadZip.mzip(this, m)
