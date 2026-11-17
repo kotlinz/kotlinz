@@ -28,6 +28,14 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
     fun <A, B, C, D> liftA3(f: (A, B, C) -> D) = applicativeOps.liftA3(f)
     private val applicativeOps = object: MaybeApplicativeOps {}
 
+    // Alternative
+    fun <A> empty(): Maybe<A> = alternative.empty()
+    private val alternative = object: MaybeAlternative {}
+
+    // MonadPlus
+    fun <A> mzero(): Maybe<A> = monadPlus.mzero()
+    private val monadPlus = object: MaybeMonadPlus {}
+
     // MonadOps
     fun <A, B> liftM(f: (A) -> B) = monadOps.liftM(f)
     fun <A, B, C> liftM2(f: (A,  B) -> C) =  monadOps.liftM2(f)
@@ -61,6 +69,15 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
       is None -> v
     }
   }
+
+  // Alternative
+  infix fun orElse(m: K1<T, A>): Maybe<A> = alternative.orElse(this, m)
+  fun optional(): Maybe<Maybe<A>> = narrow(alternative.optional(this))
+  private val alternative = object: MaybeAlternative {}
+
+  // MonadPlus
+  infix fun mplus(m: K1<T, A>): Maybe<A> = monadPlus.mplus(this, m)
+  private val monadPlus = object: MaybeMonadPlus {}
 
   override fun equals(other: Any?): Boolean {
     return when {

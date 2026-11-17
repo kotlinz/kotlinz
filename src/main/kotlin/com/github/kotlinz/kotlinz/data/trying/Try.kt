@@ -1,6 +1,7 @@
 package com.github.kotlinz.kotlinz.data.trying
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
@@ -45,6 +46,10 @@ sealed class Try<A>: K1<Try.T, A> {
     // Traversable
     fun <G, A> sequence(applicative: Applicative<G>, v: K1<T, K1<G, A>>): K1<G, K1<T, A>> = traversable.sequence(applicative, v)
     private val traversable = object: TryTraversable {}
+
+    // MonadError
+    fun <A> raiseError(e: Throwable): Try<A> = monadError.raiseError(e)
+    private val monadError = object: TryMonadError {}
   }
 
   // Monad
@@ -52,6 +57,12 @@ sealed class Try<A>: K1<Try.T, A> {
   infix fun <B> ap(f: K1<T, (A) -> B>): Try<B> = monad.ap(f, this)
   infix fun <B> bind(f: (A) -> K1<T, B>): Try<B> = monad.bind(f, this)
   private val monad = object: TryMonad {}
+
+  // MonadError
+  infix fun handleErrorWith(f: (Throwable) -> Try<A>): Try<A> = monadError.handleErrorWith(f, this)
+  infix fun handleError(f: (Throwable) -> A): Try<A> = narrow(monadError.handleError(f, this))
+  fun attempt(): Try<Either<Throwable, A>> = narrow(monadError.attempt(this))
+  private val monadError = object: TryMonadError {}
 
   // Foldable
   fun <B> foldl(initial: B, f: (B, A) -> B): B = foldable.foldl(initial, f, this)
