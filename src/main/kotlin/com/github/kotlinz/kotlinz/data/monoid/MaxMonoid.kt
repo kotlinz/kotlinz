@@ -1,9 +1,10 @@
 package com.github.kotlinz.kotlinz.data.monoid
 
 import com.github.kotlinz.kotlinz.data.maybe.Maybe
+import com.github.kotlinz.kotlinz.type.group.Band
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
-data class MaxMonoid<A: Comparable<A>>(val value: Maybe<A>) : Monoid<Maybe<A>, MaxMonoid<A>> {
+data class MaxMonoid<A: Comparable<A>>(val value: Maybe<A>) : Monoid<Maybe<A>, MaxMonoid<A>>, Band<Maybe<A>, MaxMonoid<A>> {
     constructor(): this(Maybe.None())
 
     override fun op(a: MaxMonoid<A>, b: MaxMonoid<A>) = if (isLeftMax(a.value, b.value)) a else b
