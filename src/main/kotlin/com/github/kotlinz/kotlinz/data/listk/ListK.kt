@@ -1,6 +1,7 @@
 package com.github.kotlinz.kotlinz.data.listk
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.data.maybe.Maybe
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fxReplay
 
@@ -21,6 +22,10 @@ data class ListK<A>(val value: List<A>): K1<ListK.T, A> {
     fun <A, B, C> liftA2(f: (A, B) -> C) = applicativeOps.liftA2(f)
     fun <A, B, C, D> liftA3(f: (A, B, C) -> D) = applicativeOps.liftA3(f)
     private val applicativeOps = object: ListKApplicativeOps {}
+
+    // Alternative
+    fun <A> empty(): ListK<A> = alternative.empty()
+    private val alternative = object: ListKAlternative {}
 
     // MonadOps
     fun <A, B> liftM(f: (A) -> B) = monadOps.liftM(f)
@@ -46,6 +51,11 @@ data class ListK<A>(val value: List<A>): K1<ListK.T, A> {
   // MonadPlus
   infix fun mplus(m: K1<T, A>): ListK<A> = monadPlus.mplus(this, m)
   private val monadPlus = object: ListKMonadPlus {}
+
+  // Alternative
+  infix fun orElse(m: K1<T, A>): ListK<A> = alternative.orElse(this, m)
+  fun optional(): ListK<Maybe<A>> = narrow(alternative.optional(this))
+  private val alternative = object: ListKAlternative {}
 
   // MonadZip
   infix fun <B> mzip(m: K1<T, B>): ListK<Pair<A, B>> = monadZip.mzip(this, m)
