@@ -16,6 +16,9 @@ class Kleisli<F, A, B>(val monad: Monad<F>, val run: (A) -> K1<F, B>) : K3<Kleis
         fun <F, A, B> arr(monad: Monad<F>, f: (A) -> B): Kleisli<F, A, B> = arrow(monad).arr(f)
         fun <F, A, B> swap(monad: Monad<F>): K3<T, F, Pair<A, B>, Pair<B, A>> = arrow(monad).swap()
 
+        fun <F, A, B> app(monad: Monad<F>): Kleisli<F, Pair<K3<T, F, A, B>, A>, B> = arrowApply(monad).app()
+
+        private fun <F> arrowApply(monad: Monad<F>) = object: KleisliArrowApply<F> { override val monad = monad }
         private fun <F> arrow(monad: Monad<F>) = object: KleisliArrow<F> { override val monad = monad }
     }
 
@@ -34,6 +37,10 @@ class Kleisli<F, A, B>(val monad: Monad<F>, val run: (A) -> K1<F, B>) : K3<Kleis
     fun <C> left(): Kleisli<F, Either<A, C>, Either<B, C>> = choice().left(this)
     fun <C> right(): Kleisli<F, Either<C, A>, Either<C, B>> = choice().right(this)
 
+    fun <C, D> splitChoice(g: K3<T, F, C, D>): Kleisli<F, Either<A, C>, Either<B, D>> = arrowChoice().splitChoice(this, g)
+    fun <C> fanin(g: K3<T, F, C, B>): Kleisli<F, Either<A, C>, B> = arrowChoice().fanin(this, g)
+
     private fun profunctor() = object: KleisliProfunctor<F> { override val monad = this@Kleisli.monad }
     private fun choice() = object: KleisliChoice<F> { override val monad = this@Kleisli.monad }
+    private fun arrowChoice() = object: KleisliArrowChoice<F> { override val monad = this@Kleisli.monad }
 }
