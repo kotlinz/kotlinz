@@ -28,6 +28,14 @@ class State<S, A>(val run: (S) -> Pair<A, S>): K2<State.T, S, A> {
     fun <S, A, B, C> liftM2(f: (A,  B) -> C) =  monadOps<S>().liftM2(f)
     fun <S, A, B, C, D> liftM3(f: (A, B, C) -> D) =  monadOps<S>().liftM3(f)
     private fun <S> monadOps() = object: StateMonadOps<S> {}
+
+    // MonadState
+    fun <S> get(): State<S, S> = monadState<S>().get()
+    fun <S> put(s: S): State<S, Unit> = monadState<S>().put(s)
+    fun <S> modify(f: (S) -> S): State<S, Unit> = monadState<S>().modify(f)
+    fun <S, A> gets(f: (S) -> A): State<S, A> = narrow(monadState<S>().gets(f))
+    fun <S, A> state(f: (S) -> Pair<A, S>): State<S, A> = monadState<S>().state(f)
+    private fun <S> monadState() = object: StateMonadState<S> {}
   }
 
   // Monad

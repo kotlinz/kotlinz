@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
+import com.github.kotlinz.kotlinz.type.group.Monoid
 
 sealed class Either<L, R>: K2<Either.T, L, R> {
   class T
@@ -47,6 +48,18 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
   infix fun handleErrorWith(f: (L) -> Either<L, R>): Either<L, R> = monadError.handleErrorWith(f, this)
   infix fun handleError(f: (L) -> R): Either<L, R> = narrow(monadError.handleError(f, this))
   private val monadError = object: EitherMonadError<L> {}
+
+  // Foldable
+  fun <B> foldl(initial: B, f: (B, R) -> B): B = foldable.foldl(initial, f, this)
+  fun <B> foldr(initial: B, f: (R, B) -> B): B = foldable.foldr(initial, f, this)
+  fun <M: Monoid<*, M>> foldMap(type: Class<M>, f: (R) -> M): M = foldable.foldMap(type, f, this)
+  private val foldable = object: EitherFoldable<L> {}
+
+  // Bifunctor
+  fun <M, S> bimap(f: (L) -> M, g: (R) -> S): Either<M, S> = bifunctor.bimap(f, g, this)
+  infix fun <M> first(f: (L) -> M): Either<M, R> = bifunctor.first(f, this)
+  infix fun <S> second(g: (R) -> S): Either<L, S> = bifunctor.second(g, this)
+  private val bifunctor = object: EitherBifunctor {}
 
   override fun equals(other: Any?): Boolean {
     return when {

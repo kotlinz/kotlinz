@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.nonemptylist
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fxReplay
+import com.github.kotlinz.kotlinz.type.group.Monoid
 
 data class NonEmptyList<A>(val head: A, val tail: List<A>): K1<NonEmptyList.T, A> {
   class T
@@ -36,6 +37,12 @@ data class NonEmptyList<A>(val head: A, val tail: List<A>): K1<NonEmptyList.T, A
   infix fun <B> ap(f: K1<T, (A) -> B>): NonEmptyList<B> = monad.ap(f, this)
   infix fun <B> bind(f: (A) -> K1<T, B>): NonEmptyList<B> = monad.bind(f, this)
   private val monad = object: NonEmptyListMonad {}
+
+  // Foldable
+  fun <B> foldl(initial: B, f: (B, A) -> B): B = foldable.foldl(initial, f, this)
+  fun <B> foldr(initial: B, f: (A, B) -> B): B = foldable.foldr(initial, f, this)
+  fun <M: Monoid<*, M>> foldMap(type: Class<M>, f: (A) -> M): M = foldable.foldMap(type, f, this)
+  private val foldable = object: NonEmptyListFoldable {}
 
   // Comonad
   fun extract(): A = comonad.extract(this)
