@@ -55,6 +55,12 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
   fun <G, B> traverse(applicative: Applicative<G>, f: (R) -> K1<G, B>): K1<G, K1<K1<T, L>, B>> = traversable.traverse(applicative, f, this)
   private val traversable = object: EitherTraversable<L> {}
 
+  // Bifunctor
+  fun <M, S> bimap(f: (L) -> M, g: (R) -> S): Either<M, S> = bifunctor.bimap(f, g, this)
+  infix fun <M> first(f: (L) -> M): Either<M, R> = bifunctor.first(f, this)
+  infix fun <S> second(g: (R) -> S): Either<L, S> = bifunctor.second(g, this)
+  private val bifunctor = object: EitherBifunctor {}
+
   override fun equals(other: Any?): Boolean {
     return when {
       this is Left && other is Left<*, *> -> this.value == other.value
