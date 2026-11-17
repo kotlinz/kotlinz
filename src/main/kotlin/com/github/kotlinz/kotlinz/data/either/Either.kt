@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
+import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
 sealed class Either<L, R>: K2<Either.T, L, R> {
@@ -32,6 +33,10 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
     fun <S, A, B, C> liftM2(f: (A,  B) -> C) =  monadOps<S>().liftM2(f)
     fun <S, A, B, C, D> liftM3(f: (A, B, C) -> D) =  monadOps<S>().liftM3(f)
     private fun <S> monadOps() = object: EitherMonadOps<S> {}
+
+    // Traversable
+    fun <L, G, R> sequence(applicative: Applicative<G>, v: K1<K1<T, L>, K1<G, R>>): K1<G, K1<K1<T, L>, R>> = traversable<L>().sequence(applicative, v)
+    private fun <L> traversable() = object: EitherTraversable<L> {}
   }
 
   // Monad
@@ -45,6 +50,10 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
   fun <B> foldr(initial: B, f: (R, B) -> B): B = foldable.foldr(initial, f, this)
   fun <M: Monoid<*, M>> foldMap(type: Class<M>, f: (R) -> M): M = foldable.foldMap(type, f, this)
   private val foldable = object: EitherFoldable<L> {}
+
+  // Traversable
+  fun <G, B> traverse(applicative: Applicative<G>, f: (R) -> K1<G, B>): K1<G, K1<K1<T, L>, B>> = traversable.traverse(applicative, f, this)
+  private val traversable = object: EitherTraversable<L> {}
 
   override fun equals(other: Any?): Boolean {
     return when {

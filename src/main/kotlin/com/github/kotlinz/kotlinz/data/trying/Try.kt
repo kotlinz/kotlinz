@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.trying
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
+import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
 sealed class Try<A>: K1<Try.T, A> {
@@ -40,6 +41,10 @@ sealed class Try<A>: K1<Try.T, A> {
     fun <A, B, C> liftM2(f: (A,  B) -> C) =  monadOps.liftM2(f)
     fun <A, B, C, D> liftM3(f: (A, B, C) -> D) =  monadOps.liftM3(f)
     private val monadOps = object: TryMonadOps {}
+
+    // Traversable
+    fun <G, A> sequence(applicative: Applicative<G>, v: K1<T, K1<G, A>>): K1<G, K1<T, A>> = traversable.sequence(applicative, v)
+    private val traversable = object: TryTraversable {}
   }
 
   // Monad
@@ -53,6 +58,10 @@ sealed class Try<A>: K1<Try.T, A> {
   fun <B> foldr(initial: B, f: (A, B) -> B): B = foldable.foldr(initial, f, this)
   fun <M: Monoid<*, M>> foldMap(type: Class<M>, f: (A) -> M): M = foldable.foldMap(type, f, this)
   private val foldable = object: TryFoldable {}
+
+  // Traversable
+  fun <G, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable.traverse(applicative, f, this)
+  private val traversable = object: TryTraversable {}
 
   fun getOrElse(v: A): A {
     return when (this) {
