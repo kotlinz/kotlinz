@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.io
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** Derived monadic helpers (liftM..liftM3) for [IO]. */
 interface IOMonadOps: MonadOps<IO.T>, IOMonad {
   override fun <A, B> liftM(f: (A) -> B): (K1<IO.T, A>) -> K1<IO.T, B> {
     return { m ->

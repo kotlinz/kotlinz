@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.codensity
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Codensity]. */
 interface CodensityApplicative<F>: Applicative<K1<Codensity.T, F>> {
   override fun <A> pure(v: A): Codensity<F, A> = object: Codensity<F, A>() {
     override fun <R> run(k: (A) -> K1<F, R>): K1<F, R> = k(v)

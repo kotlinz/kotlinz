@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [Function1] with a fixed input type [R] (the reader monad). */
 interface Function1Monad<R>: Monad<K2<Function1.T, Unit, R>>, Function1Applicative<R>, Function1Functor<R> {
   override fun <A> join(v: K1<K2<Function1.T, Unit, R>, K1<K2<Function1.T, Unit, R>, A>>): Function1<R, A> {
     val function = Function1.narrow(v)

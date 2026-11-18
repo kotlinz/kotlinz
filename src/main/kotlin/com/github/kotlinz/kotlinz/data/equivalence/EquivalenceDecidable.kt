@@ -4,6 +4,10 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.type.divisible.Decidable
 
+/**
+ * Decidable instance for [Equivalence]: divide requires both components to be equivalent;
+ * choose treats values from different branches as never equivalent.
+ */
 interface EquivalenceDecidable: Decidable<Equivalence.T>, EquivalenceContravariant {
   override fun <A, B, C> divide(f: (A) -> Pair<B, C>, fb: K1<Equivalence.T, B>, fc: K1<Equivalence.T, C>): Equivalence<A> =
     Equivalence { a1, a2 ->

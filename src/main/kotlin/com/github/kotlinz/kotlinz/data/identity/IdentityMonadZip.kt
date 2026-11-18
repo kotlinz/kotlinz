@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.identity
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadZip
 
+/** MonadZip instance for [Identity]. */
 interface IdentityMonadZip: MonadZip<Identity.T>, IdentityMonad {
   override fun <A, B> mzip(m1: K1<Identity.T, A>, m2: K1<Identity.T, B>): Identity<Pair<A, B>> {
     return Identity.pure(Pair(Identity.narrow(m1).value, Identity.narrow(m2).value))

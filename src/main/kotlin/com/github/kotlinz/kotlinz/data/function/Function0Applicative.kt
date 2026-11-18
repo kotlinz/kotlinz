@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.function
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Function0]. */
 interface Function0Applicative: Applicative<Function0.T> {
   override fun <A> pure(v: A): Function0<A> = Function0 { v }
 

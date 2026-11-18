@@ -4,8 +4,11 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.Foldable
 
+/** Foldable instance for [Compose]. Folds the outer layer, then each inner layer. */
 interface ComposeFoldable<F, G>: Foldable<K2<Compose.T, F, G>> {
+  /** Foldable of the outer layer. */
   val foldableF: Foldable<F>
+  /** Foldable of the inner layer. */
   val foldableG: Foldable<G>
 
   override fun <A, B> foldl(initial: B, f: (B, A) -> B, v: K1<K2<Compose.T, F, G>, A>): B {

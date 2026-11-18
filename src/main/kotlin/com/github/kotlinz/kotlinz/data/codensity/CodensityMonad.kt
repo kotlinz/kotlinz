@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.codensity
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [Codensity]. Binds are right-associated, so left-nested chains do not degrade. */
 interface CodensityMonad<F>: Monad<K1<Codensity.T, F>>, CodensityApplicative<F>, CodensityFunctor<F> {
   override fun <A> join(v: K1<K1<Codensity.T, F>, K1<K1<Codensity.T, F>, A>>): Codensity<F, A> = bind({ it }, v)
 

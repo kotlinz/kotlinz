@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.identity
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [Identity]. */
 interface IdentityMonad: Monad<Identity.T>, IdentityApplicative, IdentityFunctor {
   override fun <A> join(v: K1<Identity.T, K1<Identity.T, A>>): Identity<A> {
     return Identity.narrow(Identity.narrow(v).value)

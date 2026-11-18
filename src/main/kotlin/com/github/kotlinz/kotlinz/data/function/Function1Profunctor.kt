@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.function
 import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.type.profunctor.Profunctor
 
+/** Profunctor instance for [Function1]: contravariant in the input, covariant in the output. */
 interface Function1Profunctor: Profunctor<Function1.T, Unit> {
   override fun <A, B, C, D> dimap(f: (A) -> B, g: (C) -> D, v: K3<Function1.T, Unit, B, C>): Function1<A, D> {
     val function = Function1.narrow(v)

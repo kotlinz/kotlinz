@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.either
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadError
 
+/** MonadError instance for [Either] with the left type as the error type. */
 interface EitherMonadError<L>: MonadError<K1<Either.T, L>, L>, EitherMonad<L> {
   override fun <A> raiseError(e: L): Either<L, A> = Either.Left(e)
 

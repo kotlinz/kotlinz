@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 import com.github.kotlinz.kotlinz.type.group.Semigroup
 
+/** Derived applicative helpers (liftA..liftA3) for [Ior]. */
 interface IorApplicativeOps<S: Semigroup<*, S>>: ApplicativeOps<K1<Ior.T, S>>, IorMonad<S> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K1<Ior.T, S>, A>) -> Ior<S, B> {
     return { a -> ap(pure(f), a) }

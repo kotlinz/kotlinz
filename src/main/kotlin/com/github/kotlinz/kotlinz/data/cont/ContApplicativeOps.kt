@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** ApplicativeOps instance for [Cont]. */
 interface ContApplicativeOps<R>: ApplicativeOps<K1<Cont.T, R>>, ContMonad<R> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K1<Cont.T, R>, A>) -> Cont<R, B> {
     return { a -> Cont.narrow(a) ap Cont.pure(f) }

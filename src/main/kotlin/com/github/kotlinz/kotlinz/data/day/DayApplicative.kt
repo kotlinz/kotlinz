@@ -4,11 +4,15 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Day]. Requires Applicatives of F and G. */
 interface DayApplicative<F, G>: Applicative<K2<Day.T, F, G>>, DayFunctor<F, G> {
+  /** Applicative of the left functor. */
   val first: Applicative<F>
+  /** Applicative of the right functor. */
   val second: Applicative<G>
 
   companion object {
+    /** Creates the instance from Applicatives of F and G. */
     fun <F, G> of(first: Applicative<F>, second: Applicative<G>): DayApplicative<F, G> {
       val (f, g) = Pair(first, second)
       return object: DayApplicative<F, G> {

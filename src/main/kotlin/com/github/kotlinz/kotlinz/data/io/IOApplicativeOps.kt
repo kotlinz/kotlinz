@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** Derived applicative helpers (liftA..liftA3) for [IO]. */
 interface IOApplicativeOps: ApplicativeOps<IO.T>, IOMonad {
   override fun <A, B> liftA(f: (A) -> B): (K1<IO.T, A>) -> IO<B> {
     return { a -> IO.narrow(a) ap IO.pure(f) }

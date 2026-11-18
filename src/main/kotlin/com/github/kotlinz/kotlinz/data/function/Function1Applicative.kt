@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Function1] with a fixed input type [R]; both functions receive the same input. */
 interface Function1Applicative<R>: Applicative<K2<Function1.T, Unit, R>> {
   override fun <A> pure(v: A): Function1<R, A> = Function1 { v }
 

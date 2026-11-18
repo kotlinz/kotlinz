@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.eval
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Comonad
 
+/** Comonad instance for [Eval]. */
 interface EvalComonad: Comonad<Eval.T>, EvalCopointed, EvalFunctor {
   override fun <A> duplicate(v: K1<Eval.T, A>): Eval<K1<Eval.T, A>> = Eval.now(v)
 

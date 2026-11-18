@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.either
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Either]; [ap] returns the first [Either.Left] encountered (no error accumulation). */
 interface EitherApplicative<S>: Applicative<K1<Either.T, S>> {
   override fun <A> pure(v: A): Either<S, A> = Either.Right(v)
 

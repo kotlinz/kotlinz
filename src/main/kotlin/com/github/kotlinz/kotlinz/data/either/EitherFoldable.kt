@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.either
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.Foldable
 
+/** Foldable instance for [Either]; a [Either.Left] is treated as empty. */
 interface EitherFoldable<S>: Foldable<K1<Either.T, S>> {
   override fun <A, B> foldl(initial: B, f: (B, A) -> B, v: K1<K1<Either.T, S>, A>): B {
     val either = Either.narrow(v)

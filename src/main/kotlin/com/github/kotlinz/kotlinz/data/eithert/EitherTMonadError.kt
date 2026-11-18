@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.type.monad.MonadError
 
+/** MonadError instance for [EitherT] with `E` as the error type. */
 interface EitherTMonadError<F, E> : MonadError<K2<EitherT.T, F, E>, E>, EitherTMonad<F, E> {
     override fun <A> raiseError(e: E): EitherT<F, E, A> = EitherT(monad, monad.pure(Either.Left(e)))
 

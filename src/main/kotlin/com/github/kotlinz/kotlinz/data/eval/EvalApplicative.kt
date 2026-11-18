@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.eval
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Eval]. */
 interface EvalApplicative: Applicative<Eval.T> {
   override fun <A> pure(v: A): Eval<A> = Eval.now(v)
 

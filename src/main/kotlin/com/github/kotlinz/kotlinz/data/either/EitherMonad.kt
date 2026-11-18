@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.either
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [Either], short-circuiting on [Either.Left]. */
 interface EitherMonad<S>: Monad<K1<Either.T, S>>, EitherApplicative<S>, EitherFunctor<S> {
   override fun <A> join(v: K1<K1<Either.T, S>, K1<K1<Either.T, S>, A>>): Either<S, A> {
     val either = Either.narrow(v)

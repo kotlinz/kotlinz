@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** Applicative lifting helpers for [Eval]. */
 interface EvalApplicativeOps: ApplicativeOps<Eval.T>, EvalMonad {
   override fun <A, B> liftA(f: (A) -> B): (K1<Eval.T, A>) -> Eval<B> {
     return { a -> Eval.narrow(a) ap Eval.pure(f) }

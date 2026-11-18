@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** Derived applicative helpers (liftA..liftA3) for [Function1]. */
 interface Function1ApplicativeOps<R>: ApplicativeOps<K2<Function1.T, Unit, R>>, Function1Monad<R> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K2<Function1.T, Unit, R>, A>) -> Function1<R, B> {
     return { a -> ap(pure(f), a) }

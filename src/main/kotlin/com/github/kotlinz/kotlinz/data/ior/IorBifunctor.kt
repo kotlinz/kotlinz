@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.ior
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.Bifunctor
 
+/** Bifunctor instance for [Ior]. */
 interface IorBifunctor : Bifunctor<Ior.T> {
   override fun <A, B, C, D> bimap(f: (A) -> C, g: (B) -> D, v: K2<Ior.T, A, B>): Ior<C, D> {
     return when (val ior = Ior.narrow(v)) {
