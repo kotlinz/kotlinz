@@ -7,6 +7,8 @@
 **Typed functional programming for Kotlin: higher-kinded type classes, data types, monad transformers and
 category-theory constructs, with no dependencies.**
 
+**[Documentation website](https://kotlinz.github.io/kotlinz/)** · **[API reference](https://kotlinz.github.io/kotlinz/api/)**
+
 - Higher-kinded types via the lightweight `K1<F, A>` encoding, so `Functor`, `Monad`, `Traversable`, ... are
   ordinary interfaces you can write generic code against.
 - A broad type-class hierarchy: from `Functor` / `Applicative` / `Monad` and `Foldable` / `Traversable` to
@@ -256,7 +258,10 @@ The complete matrix is in [Type classes](docs/type-classes/README.md#coverage).
 
 ## Documentation
 
-- **Guides**: [docs/](docs/README.md)
+**Website: [kotlinz.github.io/kotlinz](https://kotlinz.github.io/kotlinz/)**, with guides, search and the API
+reference in one place.
+
+- **Guides**: [Getting started](https://kotlinz.github.io/kotlinz/getting-started) (sources in [docs/](docs/README.md))
   - [Higher-kinded types and conventions](docs/hkt.md)
   - [Type classes](docs/type-classes/README.md)
   - [Data types](docs/data-types.md)
@@ -265,7 +270,10 @@ The complete matrix is in [Type classes](docs/type-classes/README.md#coverage).
   - [Monoids and algebraic structures](docs/monoids.md)
   - [Comonads](docs/comonads.md)
   - [Category theory](docs/category-theory.md)
-- **API reference**: [kotlinz.github.io/kotlinz](https://kotlinz.github.io/kotlinz/)
+- **API reference**: [kotlinz.github.io/kotlinz/api](https://kotlinz.github.io/kotlinz/api/)
+
+The website is built with [VitePress](https://vitepress.dev/) from `docs/`. To preview it locally, run
+`npm ci && npm run docs:dev`.
 
 ## Related
 
