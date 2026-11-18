@@ -3,7 +3,7 @@ package com.github.kotlinz.kotlinz.type.group
 /**
  * A type with an associative binary operation.
  *
- * Instances are value classes that implement this interface with themselves as `Self` and
+ * Instances are wrapper classes (e.g. `SumMonoid`) that implement this interface with themselves as `Self` and
  * provide a public no-arg constructor, which the companion helpers use to obtain an instance
  * reflectively (e.g. `Semigroup.op(SumMonoid::class.java, a, b)`).
  *
