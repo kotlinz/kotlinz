@@ -4,3 +4,6 @@ build/
 .kotlin/
 .idea/
 *.iml
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
