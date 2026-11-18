@@ -1,8 +1,9 @@
 # Kotlinz guides
 
 These guides explain how Kotlinz is put together and how to use it. Every Kotlin sample compiles against the current
-API and its `check(...)` assertions hold. For the generated API reference, see
-[kotlinz.github.io/kotlinz](https://kotlinz.github.io/kotlinz/).
+API and its `check(...)` assertions hold. New to Kotlinz? Start with [Getting started](getting-started.md). The
+guides are also published on the [project website](https://kotlinz.github.io/kotlinz/), next to the generated
+[API reference](https://kotlinz.github.io/kotlinz/api/).
 
 ## Reading order
 
