@@ -3,6 +3,7 @@ plugins {
     jacoco
     `maven-publish`
     id("pl.allegro.tech.build.axion-release") version "1.21.4"
+    id("org.jetbrains.dokka") version "2.3.0"
 }
 
 scmVersion {
@@ -47,6 +48,18 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
+        }
+    }
+}
+
+dokka {
+    moduleName.set("kotlinz")
+    dokkaSourceSets.main {
+        includes.from("Module.md")
+        sourceLink {
+            localDirectory.set(file("src/main/kotlin"))
+            remoteUrl("https://github.com/kotlinz/kotlinz/tree/master/src/main/kotlin")
+            remoteLineSuffix.set("#L")
         }
     }
 }
