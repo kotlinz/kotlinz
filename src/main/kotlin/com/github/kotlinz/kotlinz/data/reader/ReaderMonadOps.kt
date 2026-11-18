@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.reader
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** MonadOps (liftM family) for [Reader]. */
 interface ReaderMonadOps<S>: MonadOps<K1<Reader.T, S>>, ReaderMonad<S> {
   override fun <A, B> liftM(f: (A) -> B): (K1<K1<Reader.T, S>, A>) -> K1<K1<Reader.T, S>, B> {
     return { m ->

@@ -5,7 +5,9 @@ import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.Functor
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Functor instance for [ReaderT], delegating to the underlying monad. */
 interface ReaderTFunctor<F, R> : Functor<K2<ReaderT.T, F, R>> {
+    /** The underlying monad. */
     val monad: Monad<F>
 
     override fun <A, B> fmap(f: (A) -> B, v: K1<K2<ReaderT.T, F, R>, A>): ReaderT<F, R, B> {

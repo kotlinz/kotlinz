@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.state
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [State]. Deeply nested `bind` chains are not stack-safe. */
 interface StateMonad<S>: Monad<K1<State.T, S>>, StateApplicative<S>, StateFunctor<S> {
   override fun <A> join(v: K1<K1<State.T, S>, K1<K1<State.T, S>, A>>): State<S, A> {
     val state = State.narrow(v)

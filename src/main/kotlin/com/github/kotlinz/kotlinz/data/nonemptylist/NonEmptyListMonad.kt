@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.nonemptylist
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [NonEmptyList]; [join] concatenates the inner lists. */
 interface NonEmptyListMonad: Monad<NonEmptyList.T>, NonEmptyListApplicative, NonEmptyListFunctor {
   override fun <A> join(v: K1<NonEmptyList.T, K1<NonEmptyList.T, A>>): NonEmptyList<A> {
     val list = NonEmptyList.narrow(v)

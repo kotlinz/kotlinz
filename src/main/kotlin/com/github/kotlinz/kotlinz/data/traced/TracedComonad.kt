@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.Comonad
 
+/** Comonad instance for [Traced]; requires the Monoid class via [type]. */
 interface TracedComonad<M: Monoid<*, M>>: Comonad<K1<Traced.T, M>>, TracedCopointed<M>, TracedFunctor<M> {
   override val type: Class<M>
 

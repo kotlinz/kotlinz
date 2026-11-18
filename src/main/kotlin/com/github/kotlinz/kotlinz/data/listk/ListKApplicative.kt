@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.listk
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [ListK] with cartesian-product semantics. */
 interface ListKApplicative: Applicative<ListK.T>, ListKFunctor {
   override fun <A> pure(v: A): ListK<A> = ListK(listOf(v))
 

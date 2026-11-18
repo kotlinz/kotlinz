@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.Traversable
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Traversable instance for [NonEmptyList]. */
 interface NonEmptyListTraversable: Traversable<NonEmptyList.T>, NonEmptyListFunctor, NonEmptyListFoldable {
   override fun <G, A, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>, v: K1<NonEmptyList.T, A>): K1<G, K1<NonEmptyList.T, B>> {
     val list = NonEmptyList.narrow(v)

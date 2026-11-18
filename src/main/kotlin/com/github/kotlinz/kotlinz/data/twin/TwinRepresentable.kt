@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.twin
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.representable.Representable
 
+/** Representable instance for [Twin], represented by [Boolean]. */
 interface TwinRepresentable: Representable<Twin.T, Boolean>, TwinFunctor {
   override fun <A> tabulate(f: (Boolean) -> A): Twin<A> = Twin(f(false), f(true))
 

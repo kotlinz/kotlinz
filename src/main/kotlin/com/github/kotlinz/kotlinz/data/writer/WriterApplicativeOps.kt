@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
+/** Applicative lifting helpers for [Writer]. */
 interface WriterApplicativeOps<W: Monoid<*, W>>: ApplicativeOps<K1<Writer.T, W>>, WriterMonad<W> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K1<Writer.T, W>, A>) -> Writer<W, B> {
     return { a -> Writer.narrow(a) ap Writer.pure(type, f) }

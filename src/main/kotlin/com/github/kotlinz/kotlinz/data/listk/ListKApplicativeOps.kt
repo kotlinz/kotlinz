@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** Applicative lifting helpers for [ListK]. */
 interface ListKApplicativeOps: ApplicativeOps<ListK.T>, ListKApplicative {
   override fun <A, B> liftA(f: (A) -> B): (K1<ListK.T, A>) -> ListK<B> {
     return { a -> ListK.narrow(a) ap ListK.pure(f) }

@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.kleisli
 import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.type.profunctor.Strong
 
+/** Strong instance for [Kleisli]. */
 interface KleisliStrong<F> : Strong<Kleisli.T, F>, KleisliProfunctor<F> {
     override fun <A, B, C> first(v: K3<Kleisli.T, F, A, B>): Kleisli<F, Pair<A, C>, Pair<B, C>> {
         val k = Kleisli.narrow(v)

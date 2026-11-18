@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.Functor
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
+/** Functor instance for [Writer]. */
 interface WriterFunctor<W: Monoid<*, W>> : Functor<K1<Writer.T, W>> {
   val type: Class<W>
 

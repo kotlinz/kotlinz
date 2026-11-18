@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.MonadWriter
 
+/** MonadWriter instance for [Writer]. */
 interface WriterMonadWriter<W: Monoid<*, W>>: MonadWriter<K1<Writer.T, W>, W>, WriterMonad<W> {
   override fun <A> writer(v: Pair<A, W>): Writer<W, A> = Writer(type, v)
 

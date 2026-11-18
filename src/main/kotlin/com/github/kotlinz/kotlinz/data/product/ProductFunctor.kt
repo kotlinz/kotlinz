@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.Functor
 
+/** Functor instance for [Product]; maps both components. */
 interface ProductFunctor<F, G>: Functor<K2<Product.T, F, G>> {
   val functorF: Functor<F>
   val functorG: Functor<G>

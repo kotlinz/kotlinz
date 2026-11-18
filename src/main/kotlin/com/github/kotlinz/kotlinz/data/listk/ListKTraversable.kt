@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.Traversable
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Traversable instance for [ListK]. */
 interface ListKTraversable: Traversable<ListK.T>, ListKFunctor, ListKFoldable {
   override fun <G, A, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>, v: K1<ListK.T, A>): K1<G, K1<ListK.T, B>> =
     foldr(applicative.pure(ListK(listOf<B>())), { a: A, acc: K1<G, K1<ListK.T, B>> ->

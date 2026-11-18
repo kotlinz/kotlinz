@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.kleisli
 import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.type.arrow.Arrow
 
+/** Arrow instance for [Kleisli]. */
 interface KleisliArrow<F> : Arrow<Kleisli.T, F>, KleisliCategory<F> {
     override fun <A, B> arr(f: (A) -> B): Kleisli<F, A, B> {
         return Kleisli(monad) { a -> monad.pure(f(a)) }

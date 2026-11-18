@@ -4,6 +4,10 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Semigroup
 
+/**
+ * Applicative instance for [Validated] that accumulates errors with the Semigroup [E].
+ * Requires the Semigroup class via [type].
+ */
 interface ValidatedApplicative<E: Semigroup<*, E>>: Applicative<K1<Validated.T, E>>, ValidatedFunctor<E> {
   val type: Class<E>
 

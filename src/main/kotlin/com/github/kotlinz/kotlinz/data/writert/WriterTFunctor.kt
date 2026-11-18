@@ -6,6 +6,7 @@ import com.github.kotlinz.kotlinz.type.Functor
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Functor instance for [WriterT]; requires the underlying [monad] and Monoid class [type]. */
 interface WriterTFunctor<F, W: Monoid<*, W>> : Functor<K2<WriterT.T, F, W>> {
     val monad: Monad<F>
     val type: Class<W>

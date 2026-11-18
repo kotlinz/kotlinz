@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.nonemptylist
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** MonadOps (liftM family) for [NonEmptyList]. */
 interface NonEmptyListMonadOps: MonadOps<NonEmptyList.T>, NonEmptyListMonad {
   override fun <A, B> liftM(f: (A) -> B): (K1<NonEmptyList.T, A>) -> K1<NonEmptyList.T, B> {
     return { m ->

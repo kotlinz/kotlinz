@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.reader
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadReader
 
+/** MonadReader instance for [Reader]. */
 interface ReaderMonadReader<R> : MonadReader<K1<Reader.T, R>, R>, ReaderMonad<R> {
     override fun ask(): Reader<R, R> = Reader { r -> r }
 

@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.Traversable
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Traversable instance for [Maybe]. */
 interface MaybeTraversable: Traversable<Maybe.T>, MaybeFunctor, MaybeFoldable {
   override fun <G, A, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>, v: K1<Maybe.T, A>): K1<G, K1<Maybe.T, B>> {
     val maybe = Maybe.narrow(v)

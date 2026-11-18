@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.maybe
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Alternative
 
+/** Alternative instance for [Maybe]: [empty] is [Maybe.None] and [orElse] picks the first [Maybe.Just]. */
 interface MaybeAlternative: Alternative<Maybe.T>, MaybeApplicative {
   override fun <A> empty(): Maybe<A> = Maybe.None()
 

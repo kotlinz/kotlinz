@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [ReaderT], delegating to the underlying monad. */
 interface ReaderTApplicative<F, R> : Applicative<K2<ReaderT.T, F, R>>, ReaderTFunctor<F, R> {
     override fun <A> pure(v: A): ReaderT<F, R, A> = ReaderT(monad) { _ -> monad.pure(v) }
 

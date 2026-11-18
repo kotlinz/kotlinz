@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** MonadOps (liftM family) for [RWS]. */
 interface RWSMonadOps<R, W: Monoid<*, W>, S>: MonadOps<K3<RWS.T, R, W, S>>, RWSMonad<R, W, S> {
   override fun <A, B> liftM(f: (A) -> B): (K1<K3<RWS.T, R, W, S>, A>) -> K1<K3<RWS.T, R, W, S>, B> {
     return { m ->

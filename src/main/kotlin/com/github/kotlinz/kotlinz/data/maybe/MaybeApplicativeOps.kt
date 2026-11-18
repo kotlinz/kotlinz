@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** Applicative lifting helpers for [Maybe]. */
 interface MaybeApplicativeOps: ApplicativeOps<Maybe.T>, MaybeApplicative {
   override fun <A, B> liftA(f: (A) -> B): (K1<Maybe.T, A>) -> Maybe<B> {
     return { a -> Maybe.narrow(a) ap Maybe.pure(f) }

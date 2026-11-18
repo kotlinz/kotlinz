@@ -5,7 +5,9 @@ import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.Functor
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Functor instance for [StateT]; requires the inner [Monad] via [monad]. */
 interface StateTFunctor<F, S> : Functor<K2<StateT.T, F, S>> {
+    /** The inner monad instance. */
     val monad: Monad<F>
 
     override fun <A, B> fmap(f: (A) -> B, v: K1<K2<StateT.T, F, S>, A>): StateT<F, S, B> {

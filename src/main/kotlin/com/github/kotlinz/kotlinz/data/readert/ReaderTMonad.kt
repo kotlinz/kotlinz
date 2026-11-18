@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [ReaderT], delegating to the underlying monad. */
 interface ReaderTMonad<F, R> : Monad<K2<ReaderT.T, F, R>>, ReaderTApplicative<F, R>, ReaderTFunctor<F, R> {
     override fun <A> join(v: K1<K2<ReaderT.T, F, R>, K1<K2<ReaderT.T, F, R>, A>>): ReaderT<F, R, A> = bind({ it }, v)
 

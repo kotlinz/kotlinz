@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.type.monad.Monad
 import com.github.kotlinz.kotlinz.type.profunctor.Profunctor
 
+/** Profunctor instance for [Kleisli]. */
 interface KleisliProfunctor<F> : Profunctor<Kleisli.T, F> {
     val monad: Monad<F>
 

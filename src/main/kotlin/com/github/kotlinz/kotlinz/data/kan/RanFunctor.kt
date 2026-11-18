@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.Functor
 
+/** Functor instance for [Ran]. */
 interface RanFunctor<G, H>: Functor<K2<Ran.T, G, H>> {
   override fun <A, B> fmap(f: (A) -> B, v: K1<K2<Ran.T, G, H>, A>): Ran<G, H, B> {
     val ran = Ran.narrow(v)

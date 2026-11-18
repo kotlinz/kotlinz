@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.state
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [State]; effects run left to right (function first). */
 interface StateApplicative<S>: Applicative<K1<State.T, S>> {
   override fun <A> pure(v: A): State<S, A> = State { s -> Pair(v, s) }
 

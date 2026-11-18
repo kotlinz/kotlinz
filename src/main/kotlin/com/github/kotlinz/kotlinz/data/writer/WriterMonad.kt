@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [Writer]; logs are combined left to right. */
 interface WriterMonad<W: Monoid<*, W>>: Monad<K1<Writer.T, W>>, WriterApplicative<W>, WriterFunctor<W> {
   override fun <A> join(v: K1<K1<Writer.T, W>, K1<K1<Writer.T, W>, A>>): Writer<W, A> {
     val writer = Writer.narrow(v)

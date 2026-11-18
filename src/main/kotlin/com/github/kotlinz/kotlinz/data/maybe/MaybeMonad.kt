@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.maybe
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [Maybe]. */
 interface MaybeMonad: Monad<Maybe.T>, MaybeApplicative, MaybeFunctor {
   override fun <A> join(v: K1<Maybe.T, K1<Maybe.T, A>>): Maybe<A> {
     val maybe = Maybe.narrow(v)

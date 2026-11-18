@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** ApplicativeOps (liftA family) for [Product]. */
 interface ProductApplicativeOps<F, G>: ApplicativeOps<K2<Product.T, F, G>>, ProductApplicative<F, G> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K2<Product.T, F, G>, A>) -> Product<F, G, B> {
     return { a -> ap(pure(f), a) }

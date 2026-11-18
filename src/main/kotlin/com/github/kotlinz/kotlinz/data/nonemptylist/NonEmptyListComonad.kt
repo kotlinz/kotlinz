@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.nonemptylist
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Comonad
 
+/** Comonad instance for [NonEmptyList]; [duplicate] yields the non-empty suffixes. */
 interface NonEmptyListComonad: Comonad<NonEmptyList.T>, NonEmptyListCopointed, NonEmptyListFunctor {
   override fun <A> duplicate(v: K1<NonEmptyList.T, A>): NonEmptyList<K1<NonEmptyList.T, A>> {
     val list = NonEmptyList.narrow(v)

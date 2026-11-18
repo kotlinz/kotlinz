@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.maybe
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Maybe]. */
 interface MaybeApplicative: Applicative<Maybe.T>, MaybeFunctor {
   override fun <B> pure(v: B): Maybe<B> = Maybe.Just(v)
 
