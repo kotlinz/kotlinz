@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.cont
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Cont]. */
 interface ContApplicative<R>: Applicative<K1<Cont.T, R>>, ContFunctor<R> {
   override fun <A> pure(v: A): Cont<R, A> = Cont { k -> k(v) }
 

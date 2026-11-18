@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.either
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** Monad lifting helpers for [Either]. */
 interface EitherMonadOps<S>: MonadOps<K1<Either.T, S>>, EitherMonad<S> {
   override fun <A, B> liftM(f: (A) -> B): (K1<K1<Either.T, S>, A>) -> K1<K1<Either.T, S>, B> {
     return { m ->

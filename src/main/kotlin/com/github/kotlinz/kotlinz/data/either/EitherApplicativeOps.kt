@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** Applicative lifting helpers for [Either]. */
 interface EitherApplicativeOps<S>: ApplicativeOps<K1<Either.T, S>>, EitherMonad<S> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K1<Either.T, S>, A>) -> Either<S, B> {
     return { a -> Either.narrow(a) ap Either.pure(f) }

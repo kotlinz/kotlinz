@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** Derived applicative helpers (liftA..liftA3) for [Identity]. */
 interface IdentityApplicativeOps: ApplicativeOps<Identity.T>, IdentityMonad {
   override fun <A, B> liftA(f: (A) -> B): (K1<Identity.T, A>) -> Identity<B> {
     return { a -> Identity.narrow(a) ap Identity.pure(f) }

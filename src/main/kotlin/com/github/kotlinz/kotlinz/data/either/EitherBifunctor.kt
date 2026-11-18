@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.either
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.Bifunctor
 
+/** Bifunctor instance for [Either]. */
 interface EitherBifunctor : Bifunctor<Either.T> {
   override fun <A, B, C, D> bimap(f: (A) -> C, g: (B) -> D, v: K2<Either.T, A, B>): Either<C, D> {
     return when (val either = Either.narrow(v)) {

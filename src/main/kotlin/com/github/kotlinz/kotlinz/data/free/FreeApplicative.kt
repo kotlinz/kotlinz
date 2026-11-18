@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.free
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Free]. */
 interface FreeApplicative<F>: Applicative<K1<Free.T, F>> {
   override fun <A> pure(v: A): Free<F, A> = Free.Pure(v)
 

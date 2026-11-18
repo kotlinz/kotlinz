@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.function
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** Derived monadic helpers (liftM..liftM3) for [Function0]. */
 interface Function0MonadOps: MonadOps<Function0.T>, Function0Monad {
   override fun <A, B> liftM(f: (A) -> B): (K1<Function0.T, A>) -> K1<Function0.T, B> {
     return { m -> bind({ x -> pure(f(x)) }, m) }

@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.identity
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Identity]. */
 interface IdentityApplicative: Applicative<Identity.T> {
   override fun <A> pure(v: A): Identity<A> = Identity(v)
 

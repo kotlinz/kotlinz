@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.identity
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** Derived monadic helpers (liftM..liftM3) for [Identity]. */
 interface IdentityMonadOps: MonadOps<Identity.T>, IdentityMonad {
   override fun <A, B> liftM(f: (A) -> B): (K1<Identity.T, A>) -> K1<Identity.T, B> {
     return { m ->

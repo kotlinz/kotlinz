@@ -5,6 +5,8 @@ import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.type.divisible.Decidable
 
 /**
+ * Divisible and Decidable instance for [Comparison].
+ *
  * divide compares lexicographically; choose orders every Left before every Right.
  */
 interface ComparisonDecidable: Decidable<Comparison.T>, ComparisonContravariant {

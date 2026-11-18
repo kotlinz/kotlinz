@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.identity
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Comonad
 
+/** Comonad instance for [Identity]. */
 interface IdentityComonad: Comonad<Identity.T>, IdentityFunctor {
   override fun <A> extract(v: K1<Identity.T, A>): A = Identity.narrow(v).value
 

@@ -7,6 +7,7 @@ import com.github.kotlinz.kotlinz.type.monad.MonadRec
 import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
 
 @Suppress("UNCHECKED_CAST")
+/** Interpreter backing [Free.foldMap]. */
 internal object FreeInterpreter {
   // Stack-safe when the target is a MonadRec; otherwise safety depends on the target's bind
   fun <F, M, A> foldMap(free: Free<F, A>, nt: NaturalTransformation<F, M>, monad: Monad<M>): K1<M, A> =

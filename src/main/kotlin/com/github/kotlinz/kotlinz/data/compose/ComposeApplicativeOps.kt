@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** ApplicativeOps instance for [Compose]. */
 interface ComposeApplicativeOps<F, G>: ApplicativeOps<K2<Compose.T, F, G>>, ComposeApplicative<F, G> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K2<Compose.T, F, G>, A>) -> Compose<F, G, B> {
     return { a -> ap(pure(f), a) }

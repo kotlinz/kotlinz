@@ -6,6 +6,7 @@ import com.github.kotlinz.kotlinz.data.reader.ReaderFunctor
 import com.github.kotlinz.kotlinz.type.Functor
 import com.github.kotlinz.kotlinz.type.adjunction.Adjunction
 
+/** The adjunction `Env<S, _> -| Reader<S, _>` (the curry/uncurry adjunction). */
 interface EnvReaderAdjunction<S>: Adjunction<K1<Env.T, S>, K1<Reader.T, S>> {
   override val left: Functor<K1<Env.T, S>> get() = object: EnvFunctor<S> {}
   override val right: Functor<K1<Reader.T, S>> get() = object: ReaderFunctor<S> {}

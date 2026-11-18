@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.io
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [IO]; the function effect runs before the argument effect. */
 interface IOApplicative: Applicative<IO.T> {
   override fun <A> pure(v: A): IO<A> = IO { v }
 

@@ -4,11 +4,15 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.monad.Comonad
 
+/** Comonad instance for [Day]. Requires Comonads of F and G. */
 interface DayComonad<F, G>: Comonad<K2<Day.T, F, G>>, DayFunctor<F, G> {
+  /** Comonad of the left functor. */
   val first: Comonad<F>
+  /** Comonad of the right functor. */
   val second: Comonad<G>
 
   companion object {
+    /** Creates the instance from Comonads of F and G. */
     fun <F, G> of(first: Comonad<F>, second: Comonad<G>): DayComonad<F, G> {
       val (f, g) = Pair(first, second)
       return object: DayComonad<F, G> {

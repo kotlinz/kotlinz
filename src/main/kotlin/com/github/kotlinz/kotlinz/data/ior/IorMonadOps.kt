@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.group.Semigroup
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** Derived monadic helpers (liftM..liftM3) for [Ior]. */
 interface IorMonadOps<S: Semigroup<*, S>>: MonadOps<K1<Ior.T, S>>, IorMonad<S> {
   override fun <A, B> liftM(f: (A) -> B): (K1<K1<Ior.T, S>, A>) -> K1<K1<Ior.T, S>, B> {
     return { m -> bind({ x -> pure(f(x)) }, m) }

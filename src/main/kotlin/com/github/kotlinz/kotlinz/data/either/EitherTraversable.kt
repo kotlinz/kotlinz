@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.Traversable
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Traversable instance for [Either]. */
 interface EitherTraversable<S>: Traversable<K1<Either.T, S>>, EitherFunctor<S>, EitherFoldable<S> {
   override fun <G, A, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>, v: K1<K1<Either.T, S>, A>): K1<G, K1<K1<Either.T, S>, B>> {
     val either = Either.narrow(v)

@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.env
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Comonad
 
+/** Comonad instance for [Env]. */
 interface EnvComonad<E>: Comonad<K1<Env.T, E>>, EnvCopointed<E>, EnvFunctor<E> {
   override fun <A> duplicate(v: K1<K1<Env.T, E>, A>): Env<E, K1<K1<Env.T, E>, A>> {
     val env = Env.narrow(v)

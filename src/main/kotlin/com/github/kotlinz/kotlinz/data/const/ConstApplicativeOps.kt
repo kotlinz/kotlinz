@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
+/** ApplicativeOps instance for [Const]. Requires A to be a Monoid. */
 interface ConstApplicativeOps<S: Monoid<*, S>>: ApplicativeOps<K1<Const.T, S>>, ConstApplicative<S> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K1<Const.T, S>, A>) -> Const<S, B> {
     return { a -> ap(pure(f), a) }

@@ -4,8 +4,10 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.Functor
 import com.github.kotlinz.kotlinz.type.monad.Comonad
 
+/** Comonad instance for [Cofree]. Requires a Functor of F. */
 interface CofreeComonad<F>: Comonad<K1<Cofree.T, F>>, CofreeCopointed<F>, CofreeFunctor<F> {
   companion object {
+    /** Creates the instance from a Functor of F. */
     fun <F> of(functor: Functor<F>): CofreeComonad<F> {
       val base = functor
       return object: CofreeComonad<F> {

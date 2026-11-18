@@ -4,7 +4,9 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
+/** Applicative instance for [Const]. Requires A to be a Monoid; `pure` yields its identity and `ap` combines. */
 interface ConstApplicative<S: Monoid<*, S>>: Applicative<K1<Const.T, S>>, ConstFunctor<S> {
+  /** Class of the monoid used to combine values. */
   val type: Class<S>
 
   override fun <A> pure(v: A): Const<S, A> = Const(Monoid.mzero(type))

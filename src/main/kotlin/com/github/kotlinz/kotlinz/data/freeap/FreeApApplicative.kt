@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.freeap
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [FreeAp]; effects of the function argument run first. */
 interface FreeApApplicative<F>: Applicative<K1<FreeAp.T, F>>, FreeApFunctor<F> {
   override fun <A> pure(v: A): FreeAp<F, A> = FreeAp.Pure(v)
 

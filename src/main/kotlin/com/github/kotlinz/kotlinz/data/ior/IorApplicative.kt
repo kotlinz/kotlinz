@@ -4,7 +4,9 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Semigroup
 
+/** Applicative instance for [Ior]; requires a Semigroup class [type] to accumulate left values. */
 interface IorApplicative<S: Semigroup<*, S>>: Applicative<K1<Ior.T, S>> {
+  /** Semigroup class used to combine left values. */
   val type: Class<S>
 
   override fun <A> pure(v: A): Ior<S, A> = Ior.Right(v)
@@ -17,6 +19,7 @@ interface IorApplicative<S: Semigroup<*, S>>: Applicative<K1<Ior.T, S>> {
     }
   }
 
+  /** Combines [s] in front of the left value of [v], turning a [Ior.Right] into [Ior.Both]. */
   fun <A> prependLeft(s: S, v: Ior<S, A>): Ior<S, A> = when (v) {
     is Ior.Left -> Ior.Left(Semigroup.op(type, s, v.value))
     is Ior.Right -> Ior.Both(s, v.value)
