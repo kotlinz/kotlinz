@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.maybe
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** Monadic lifting helpers for [Maybe]. */
 interface MaybeMonadOps: MonadOps<Maybe.T>, MaybeMonad {
   override fun <A, B> liftM(f: (A) -> B): (K1<Maybe.T, A>) -> K1<Maybe.T, B> {
     return { m ->

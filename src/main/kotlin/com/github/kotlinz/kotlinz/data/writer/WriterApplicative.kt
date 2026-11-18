@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
+/** Applicative instance for [Writer]; requires the Monoid class via [type]. */
 interface WriterApplicative<W: Monoid<*, W>>: Applicative<K1<Writer.T, W>> {
   val type: Class<W>
 

@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.store
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Comonad
 
+/** Comonad instance for [Store]. */
 interface StoreComonad<S>: Comonad<K1<Store.T, S>>, StoreCopointed<S>, StoreFunctor<S> {
   override fun <A> duplicate(v: K1<K1<Store.T, S>, A>): Store<S, K1<K1<Store.T, S>, A>> {
     val store = Store.narrow(v)

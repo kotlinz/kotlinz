@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** Applicative lifting helpers for [Try]. */
 interface TryApplicativeOps: ApplicativeOps<Try.T>, TryApplicative {
   override fun <A, B> liftA(f: (A) -> B): (K1<Try.T, A>) -> Try<B> {
     return { a -> Try.narrow(a) ap Try.pure(f) }

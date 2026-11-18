@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [Tuple2] (writer-like); requires the Monoid class [S]. */
 interface Tuple2Monad<S: Monoid<*, S>>: Monad<K1<Tuple2.T, S>>, Tuple2Applicative<S>, Tuple2Functor<S> {
   override fun <A> join(v: K1<K1<Tuple2.T, S>, K1<K1<Tuple2.T, S>, A>>): Tuple2<S, A> {
     val outer = Tuple2.narrow(v)

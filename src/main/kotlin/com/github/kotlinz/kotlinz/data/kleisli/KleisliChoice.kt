@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.type.profunctor.Choice
 
+/** Choice instance for [Kleisli]. */
 interface KleisliChoice<F> : Choice<Kleisli.T, F>, KleisliProfunctor<F> {
     override fun <A, B, C> left(v: K3<Kleisli.T, F, A, B>): Kleisli<F, Either<A, C>, Either<B, C>> {
         val k = Kleisli.narrow(v)

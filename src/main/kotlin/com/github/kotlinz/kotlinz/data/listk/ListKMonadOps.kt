@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.listk
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** Monadic lifting helpers for [ListK]. */
 interface ListKMonadOps: MonadOps<ListK.T>, ListKMonad {
   override fun <A, B> liftM(f: (A) -> B): (K1<ListK.T, A>) -> K1<ListK.T, B> {
     return { m ->

@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
+/** Applicative lifting helpers for [Tuple2]. */
 interface Tuple2ApplicativeOps<S: Monoid<*, S>>: ApplicativeOps<K1<Tuple2.T, S>>, Tuple2Monad<S> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K1<Tuple2.T, S>, A>) -> Tuple2<S, B> {
     return { a -> ap(pure(f), a) }

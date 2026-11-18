@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.data.maybe.Maybe
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [MaybeT]; requires a `Monad<F>` for the underlying effect. */
 interface MaybeTApplicative<F> : Applicative<K1<MaybeT.T, F>>, MaybeTFunctor<F> {
     override fun <A> pure(v: A): MaybeT<F, A> = MaybeT(monad, monad.pure(Maybe.Just(v)))
 

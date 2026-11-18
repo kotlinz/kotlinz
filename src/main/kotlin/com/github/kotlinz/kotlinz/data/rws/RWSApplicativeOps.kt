@@ -6,6 +6,7 @@ import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
+/** ApplicativeOps (liftA family) for [RWS]. */
 interface RWSApplicativeOps<R, W: Monoid<*, W>, S>: ApplicativeOps<K3<RWS.T, R, W, S>>, RWSMonad<R, W, S> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K3<RWS.T, R, W, S>, A>) -> RWS<R, W, S, B> {
     return { a -> RWS.narrow(a) ap RWS.pure(type, f) }

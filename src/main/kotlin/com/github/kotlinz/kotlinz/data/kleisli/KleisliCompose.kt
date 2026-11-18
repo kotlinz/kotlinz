@@ -4,7 +4,9 @@ import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.type.category.Compose
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Compose instance for [Kleisli], sequencing effects with `bind`. */
 interface KleisliCompose<F> : Compose<Kleisli.T, F> {
+    /** The monad used to sequence effects. */
     val monad: Monad<F>
 
     override fun <A, B, C> compose(f: K3<Kleisli.T, F, B, C>, g: K3<Kleisli.T, F, A, B>): Kleisli<F, A, C> {

@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.maybe
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.Foldable
 
+/** Foldable instance for [Maybe]. */
 interface MaybeFoldable: Foldable<Maybe.T> {
   override fun <A, B> foldl(initial: B, f: (B, A) -> B, v: K1<Maybe.T, A>): B {
     val maybe = Maybe.narrow(v)

@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.trying
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [Try]. */
 interface TryMonad: Monad<Try.T>, TryApplicative, TryFunctor {
   override fun <A> join(v: K1<Try.T, K1<Try.T, A>>): Try<A> {
     val t = Try.narrow(v)

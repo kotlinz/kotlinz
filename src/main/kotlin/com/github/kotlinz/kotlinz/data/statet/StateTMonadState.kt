@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.statet
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.monad.MonadState
 
+/** MonadState instance for [StateT]. */
 interface StateTMonadState<F, S> : MonadState<K2<StateT.T, F, S>, S>, StateTMonad<F, S> {
     override fun get(): StateT<F, S, S> = state { s -> Pair(s, s) }
     override fun put(s: S): StateT<F, S, Unit> = state { Pair(Unit, s) }

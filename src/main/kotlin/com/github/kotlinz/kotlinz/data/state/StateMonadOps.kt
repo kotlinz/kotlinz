@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.state
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** Monadic lifting helpers for [State]. */
 interface StateMonadOps<S>: MonadOps<K1<State.T, S>>, StateMonad<S> {
   override fun <A, B> liftM(f: (A) -> B): (K1<K1<State.T, S>, A>) -> K1<K1<State.T, S>, B> {
     return { m ->

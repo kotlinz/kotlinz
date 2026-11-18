@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** Monadic lifting helpers for [Writer]. */
 interface WriterMonadOps<W: Monoid<*, W>>: MonadOps<K1<Writer.T, W>>, WriterMonad<W> {
   override fun <A, B> liftM(f: (A) -> B): (K1<K1<Writer.T, W>, A>) -> K1<K1<Writer.T, W>, B> {
     return { m ->

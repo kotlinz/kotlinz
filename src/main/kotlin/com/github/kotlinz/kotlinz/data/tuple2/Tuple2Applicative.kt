@@ -4,6 +4,10 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
+/**
+ * Applicative instance for [Tuple2]; first components are combined with the Monoid [S].
+ * Requires the Monoid class via [type].
+ */
 interface Tuple2Applicative<S: Monoid<*, S>>: Applicative<K1<Tuple2.T, S>> {
   val type: Class<S>
 

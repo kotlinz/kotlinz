@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.trying
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Try]; fails fast on the first [Try.Failure]. */
 interface TryApplicative: Applicative<Try.T>, TryFunctor {
   override fun <B> pure(v: B): Try<B> = Try.Success(v)
 

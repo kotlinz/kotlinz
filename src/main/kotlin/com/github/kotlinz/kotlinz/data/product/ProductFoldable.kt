@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.Foldable
 
+/** Foldable instance for [Product]; visits the elements of `first` before those of `second`. */
 interface ProductFoldable<F, G>: Foldable<K2<Product.T, F, G>> {
   val foldableF: Foldable<F>
   val foldableG: Foldable<G>

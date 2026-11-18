@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** Applicative lifting helpers for [State]. */
 interface StateApplicativeOps<S>: ApplicativeOps<K1<State.T, S>>, StateMonad<S> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K1<State.T, S>, A>) -> State<S, B> {
     return { a -> State.narrow(a) ap State.pure(f) }

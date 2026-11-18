@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.trying
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** Monadic lifting helpers for [Try]. */
 interface TryMonadOps: MonadOps<Try.T>, TryMonad {
   override fun <A, B> liftM(f: (A) -> B): (K1<Try.T, A>) -> K1<Try.T, B> {
     return { m ->

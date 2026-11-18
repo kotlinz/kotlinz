@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
+/** Applicative instance for [WriterT]. */
 interface WriterTApplicative<F, W: Monoid<*, W>> : Applicative<K2<WriterT.T, F, W>>, WriterTFunctor<F, W> {
     override fun <A> pure(v: A): WriterT<F, W, A> = WriterT(monad, type, monad.pure(Pair(v, Monoid.mzero(type))))
 

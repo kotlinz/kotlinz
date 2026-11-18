@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.data.maybe.Maybe
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [MaybeT]; requires a `Monad<F>` for the underlying effect. */
 interface MaybeTMonad<F> : Monad<K1<MaybeT.T, F>>, MaybeTApplicative<F>, MaybeTFunctor<F> {
     override fun <A> join(v: K1<K1<MaybeT.T, F>, K1<K1<MaybeT.T, F>, A>>): MaybeT<F, A> = bind({ it }, v)
 

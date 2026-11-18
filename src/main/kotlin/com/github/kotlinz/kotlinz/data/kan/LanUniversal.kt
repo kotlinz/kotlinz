@@ -5,8 +5,7 @@ import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.Functor
 import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
 
-// Universal property: (Lan<G, H> ~> F) is isomorphic to (H ~> F . G)
-
+/** Turns `H ~> F . G` into `Lan<G, H> ~> F` (one direction of the universal property). */
 fun <F, G, H> toLan(functor: Functor<F>, s: IntoComposition<H, F, G>): NaturalTransformation<K2<Lan.T, G, H>, F> =
   object: NaturalTransformation<K2<Lan.T, G, H>, F> {
     override fun <A> invoke(fa: K1<K2<Lan.T, G, H>, A>): K1<F, A> {
@@ -15,9 +14,11 @@ fun <F, G, H> toLan(functor: Functor<F>, s: IntoComposition<H, F, G>): NaturalTr
     }
   }
 
+/** Turns `Lan<G, H> ~> F` into `H ~> F . G` (the inverse of [toLan]). */
 fun <F, G, H> fromLan(s: NaturalTransformation<K2<Lan.T, G, H>, F>): IntoComposition<H, F, G> =
   object: IntoComposition<H, F, G> {
     override fun <A> invoke(v: K1<H, A>): K1<F, K1<G, A>> = s(glan<G, H, A>(v))
   }
 
+/** The unit of the left Kan extension: embeds `H<A>` into `Lan<G, H, G<A>>`. */
 fun <G, H, A> glan(v: K1<H, A>): Lan<G, H, K1<G, A>> = Lan({ ga: K1<G, A> -> ga }, v)

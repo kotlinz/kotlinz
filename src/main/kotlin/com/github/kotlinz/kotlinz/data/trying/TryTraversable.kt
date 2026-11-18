@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.Traversable
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Traversable instance for [Try]. */
 interface TryTraversable: Traversable<Try.T>, TryFunctor, TryFoldable {
   override fun <G, A, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>, v: K1<Try.T, A>): K1<G, K1<Try.T, B>> {
     val t = Try.narrow(v)

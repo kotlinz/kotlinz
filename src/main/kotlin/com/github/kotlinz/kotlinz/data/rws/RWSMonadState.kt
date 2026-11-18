@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.MonadState
 
+/** MonadState instance for [RWS]. */
 interface RWSMonadState<R, W: Monoid<*, W>, S>: MonadState<K3<RWS.T, R, W, S>, S>, RWSMonad<R, W, S> {
   override fun get(): RWS<R, W, S, S> = state { s -> Pair(s, s) }
   override fun put(s: S): RWS<R, W, S, Unit> = state { Pair(Unit, s) }

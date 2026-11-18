@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.MonadWriter
 
+/** MonadWriter instance for [RWS]. */
 interface RWSMonadWriter<R, W: Monoid<*, W>, S>: MonadWriter<K3<RWS.T, R, W, S>, W>, RWSMonad<R, W, S> {
   override fun <A> writer(v: Pair<A, W>): RWS<R, W, S, A> = RWS(type) { _, s -> Triple(v.first, s, v.second) }
 

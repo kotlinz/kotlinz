@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.reader
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Reader]; requires a Functor implementation such as [ReaderFunctor] to be mixed in. */
 interface ReaderApplicative<R> : Applicative<K1<Reader.T, R>> {
     override fun <A> pure(v: A): Reader<R, A> = Reader { r -> v }
 

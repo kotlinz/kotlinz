@@ -5,7 +5,9 @@ import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
+/** Applicative instance for [RWS]; requires a Functor implementation such as [RWSFunctor] to be mixed in. */
 interface RWSApplicative<R, W: Monoid<*, W>, S>: Applicative<K3<RWS.T, R, W, S>> {
+  /** Runtime class of the log Monoid `W`. */
   val type: Class<W>
 
   override fun <A> pure(v: A): RWS<R, W, S, A> = RWS(type) { r, s -> Triple(v, s, Monoid.mzero(type)) }

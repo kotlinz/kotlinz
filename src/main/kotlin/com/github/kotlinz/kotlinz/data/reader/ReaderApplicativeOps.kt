@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** ApplicativeOps (liftA family) for [Reader]. */
 interface ReaderApplicativeOps<S>: ApplicativeOps<K1<Reader.T, S>>, ReaderMonad<S> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K1<Reader.T, S>, A>) -> Reader<S, B> {
     return { a -> Reader.narrow(a) ap Reader.pure(f) }

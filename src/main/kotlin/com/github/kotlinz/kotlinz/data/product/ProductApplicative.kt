@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [Product]; applies each component independently. */
 interface ProductApplicative<F, G>: Applicative<K2<Product.T, F, G>>, ProductFunctor<F, G> {
   override val functorF: Applicative<F>
   override val functorG: Applicative<G>

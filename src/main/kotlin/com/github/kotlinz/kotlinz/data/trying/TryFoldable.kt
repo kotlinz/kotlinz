@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.trying
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.Foldable
 
+/** Foldable instance for [Try]; a [Try.Failure] folds as empty. */
 interface TryFoldable: Foldable<Try.T> {
   override fun <A, B> foldl(initial: B, f: (B, A) -> B, v: K1<Try.T, A>): B {
     val t = Try.narrow(v)

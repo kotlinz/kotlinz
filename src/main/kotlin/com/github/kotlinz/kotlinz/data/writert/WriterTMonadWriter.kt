@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.MonadWriter
 
+/** MonadWriter instance for [WriterT]. */
 interface WriterTMonadWriter<F, W: Monoid<*, W>> : MonadWriter<K2<WriterT.T, F, W>, W>, WriterTMonad<F, W> {
     override fun <A> writer(v: Pair<A, W>): WriterT<F, W, A> = WriterT(monad, type, monad.pure(v))
 

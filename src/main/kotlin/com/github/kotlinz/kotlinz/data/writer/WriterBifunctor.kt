@@ -5,6 +5,8 @@ import com.github.kotlinz.kotlinz.type.Bifunctor
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
 /**
+ * Bifunctor instance for [Writer].
+ *
  * Maps the log (first parameter) and the value (second parameter) of a Writer.
  * The log function must return a Monoid; its runtime class becomes the new log type.
  */

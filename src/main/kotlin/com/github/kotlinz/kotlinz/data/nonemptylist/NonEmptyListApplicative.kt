@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.nonemptylist
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
 
+/** Applicative instance for [NonEmptyList] (cartesian product semantics). */
 interface NonEmptyListApplicative: Applicative<NonEmptyList.T>, NonEmptyListFunctor {
   override fun <A> pure(v: A): NonEmptyList<A> = NonEmptyList(v, listOf())
 

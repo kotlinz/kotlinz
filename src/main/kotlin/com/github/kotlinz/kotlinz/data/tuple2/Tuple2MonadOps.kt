@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.MonadOps
 
+/** Monadic lifting helpers for [Tuple2]. */
 interface Tuple2MonadOps<S: Monoid<*, S>>: MonadOps<K1<Tuple2.T, S>>, Tuple2Monad<S> {
   override fun <A, B> liftM(f: (A) -> B): (K1<K1<Tuple2.T, S>, A>) -> K1<K1<Tuple2.T, S>, B> {
     return { m -> bind({ x -> pure(f(x)) }, m) }

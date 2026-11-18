@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 
+/** ApplicativeOps (liftA family) for [NonEmptyList]. */
 interface NonEmptyListApplicativeOps: ApplicativeOps<NonEmptyList.T>, NonEmptyListApplicative {
   override fun <A, B> liftA(f: (A) -> B): (K1<NonEmptyList.T, A>) -> NonEmptyList<B> {
     return { a -> NonEmptyList.narrow(a) ap NonEmptyList.pure(f) }

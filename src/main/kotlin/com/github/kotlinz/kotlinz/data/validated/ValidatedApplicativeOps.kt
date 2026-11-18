@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.curried
 import com.github.kotlinz.kotlinz.type.applicative.ApplicativeOps
 import com.github.kotlinz.kotlinz.type.group.Semigroup
 
+/** Applicative lifting helpers for [Validated]. */
 interface ValidatedApplicativeOps<E: Semigroup<*, E>>: ApplicativeOps<K1<Validated.T, E>>, ValidatedApplicative<E> {
   override fun <A, B> liftA(f: (A) -> B): (K1<K1<Validated.T, E>, A>) -> Validated<E, B> {
     return { a -> ap(pure(f), a) }

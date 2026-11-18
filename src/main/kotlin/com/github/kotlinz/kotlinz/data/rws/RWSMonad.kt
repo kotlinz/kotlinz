@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.Monad
 
+/** Monad instance for [RWS]; logs are combined with the Monoid of [type]. */
 interface RWSMonad<R, W: Monoid<*, W>, S>: Monad<K3<RWS.T, R, W, S>>, RWSApplicative<R, W, S>, RWSFunctor<R, W, S> {
   override val type: Class<W>
 
