@@ -1,6 +1,7 @@
 package com.github.kotlinz.kotlinz.data.maybe
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.data.ior.Ior
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
@@ -12,7 +13,7 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * Use it instead of nullable types when a computation may produce no result and you want to
  * compose such computations with `fmap`/`bind`, combine alternatives with `orElse`, or traverse them.
  *
- * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, Foldable, Traversable.
+ * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, Foldable, Traversable, Semialign, Align, Zip.
  *
  * ```kotlin
  * val half = { n: Int -> if (n % 2 == 0) Maybe.Just(n / 2) else Maybe.None<Int>() }
@@ -80,6 +81,11 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
     /** Turns a `Maybe` of `G` effects into a `G` effect of `Maybe`. */
     fun <G, A> sequence(applicative: Applicative<G>, v: K1<T, K1<G, A>>): K1<G, K1<T, A>> = traversable.sequence(applicative, v)
     private val traversable = object: MaybeTraversable {}
+
+    // Align
+    /** Returns [None], the identity of [align]. */
+    fun <A> nil(): Maybe<A> = align.nil()
+    private val align = object: MaybeAlign {}
   }
 
   // Monad
@@ -104,6 +110,17 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
   /** Applies an effectful [f] to the value and collects the result inside [applicative]. */
   fun <G, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable.traverse(applicative, f, this)
   private val traversable = object: MaybeTraversable {}
+
+  // Semialign / Zip
+  /** Pairs this with [m], keeping whichever values are present. */
+  infix fun <B> align(m: K1<T, B>): Maybe<Ior<A, B>> = zip.align(this, m)
+  /** Combines this with [m] using [f] on whichever values are present. */
+  fun <B, C> alignWith(m: K1<T, B>, f: (Ior<A, B>) -> C): Maybe<C> = zip.alignWith(f, this, m)
+  /** Pairs this with [m] when both values are present. */
+  infix fun <B> zip(m: K1<T, B>): Maybe<Pair<A, B>> = zip.zip(this, m)
+  /** Combines this with [m] using [f] when both values are present. */
+  fun <B, C> zipWith(m: K1<T, B>, f: (A, B) -> C): Maybe<C> = zip.zipWith(f, this, m)
+  private val zip = object: MaybeZip {}
 
   /** Returns the contained value, or [v] when [None]. */
   fun getOrElse(v: A): A {
