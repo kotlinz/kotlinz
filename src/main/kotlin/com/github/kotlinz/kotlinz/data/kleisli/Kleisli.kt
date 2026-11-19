@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.type.monad.Monad
+import com.github.kotlinz.kotlinz.type.monad.MonadFix
 
 /**
  * A monadic function `(A) -> F<B>` treated as an arrow, for some monad [F].
@@ -13,7 +14,7 @@ import com.github.kotlinz.kotlinz.type.monad.Monad
  * inputs/outputs with [dimap], and route through pairs or [Either] with the arrow combinators.
  *
  * Instances: Profunctor, Strong, Choice, Compose, Category, Arrow, ArrowChoice, ArrowApply
- * (each requires the underlying `Monad<F>`).
+ * (each requires the underlying `Monad<F>`), and ArrowLoop (requires `MonadFix<F>`).
  *
  * ```kotlin
  * val monad = object : IdentityMonad {}
@@ -44,6 +45,10 @@ class Kleisli<F, A, B>(val monad: Monad<F>, val run: (A) -> K1<F, B>) : K3<Kleis
 
         /** An arrow that applies the arrow in the first component to the value in the second. */
         fun <F, A, B> app(monad: Monad<F>): Kleisli<F, Pair<K3<T, F, A, B>, A>, B> = arrowApply(monad).app()
+
+        /** Feeds the `D` output of [f] back as its (lazy) `D` input, using the value recursion of [monad]. */
+        fun <F, A, B, D> loop(monad: MonadFix<F>, f: K3<T, F, Pair<A, () -> D>, Pair<B, D>>): Kleisli<F, A, B> =
+            object: KleisliArrowLoop<F> { override val monad = monad }.loop(f)
 
         private fun <F> arrowApply(monad: Monad<F>) = object: KleisliArrowApply<F> { override val monad = monad }
         private fun <F> arrow(monad: Monad<F>) = object: KleisliArrow<F> { override val monad = monad }
