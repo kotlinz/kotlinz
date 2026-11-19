@@ -12,7 +12,9 @@ interface Distributive<G>: Functor<G> {
 ```
 
 `Distributive` is the dual of `Traversable`: it pulls a `G` out of *any* functor `F`. Only functors with a fixed
-"shape", such as functions from a fixed input, can do this. Instances: `Identity`, `Reader<R, _>`.
+"shape", such as functions from a fixed input, can do this. Instances: `Identity`, `Reader<R, _>`. A
+`Distributive` functor is also what makes the profunctor `Star<F, _, _>` [`Closed`](bifunctor-profunctor-arrow.md#more-profunctor-classes)
+(`StarClosed` takes the `Distributive<F>` instance).
 
 ```kotlin
 import com.github.kotlinz.kotlinz.K1
