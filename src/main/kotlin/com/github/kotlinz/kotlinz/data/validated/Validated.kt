@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.validated
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.data.either.Either
+import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.group.Semigroup
 
@@ -14,7 +15,7 @@ import com.github.kotlinz.kotlinz.type.group.Semigroup
  * form or config validation where every problem should be reported. It intentionally has no Monad
  * instance, because `bind` cannot accumulate errors.
  *
- * Instances: [ValidatedFunctor], [ValidatedBifoldable], [ValidatedApplicative], [ValidatedApplicativeOps] (the latter two
+ * Instances: [ValidatedFunctor], [ValidatedBifunctor], [ValidatedBifoldable], [ValidatedBitraversable], [ValidatedApplicative], [ValidatedApplicativeOps] (the latter two
  * require a Semigroup error type).
  *
  * ```kotlin
@@ -48,6 +49,11 @@ sealed class Validated<E, A>: K2<Validated.T, E, A> {
       is Either.Right -> Valid(v.value)
     }
 
+    // Bitraversable
+    /** Turns a [Validated] of effects on both sides into an effect of a [Validated]. */
+    fun <G, E, A> bisequence(applicative: Applicative<G>, v: K2<T, K1<G, E>, K1<G, A>>): K1<G, K2<T, E, A>> = bitraversable.bisequence(applicative, v)
+    private val bitraversable = object: ValidatedBitraversable {}
+
     // Applicative
     /** Wraps [v] as [Valid]. */
     fun <E: Semigroup<*, E>, A> pure(type: Class<E>, v: A): Validated<E, A> = applicative(type).pure(v)
@@ -76,6 +82,20 @@ sealed class Validated<E, A>: K2<Validated.T, E, A> {
   /** Maps the error with [f] or the valid value with [g] into the monoid [M]. */
   fun <M: Monoid<*, M>> bifoldMap(type: Class<M>, f: (E) -> M, g: (A) -> M): M = bifoldable.bifoldMap(type, f, g, this)
   private val bifoldable = object: ValidatedBifoldable {}
+
+  // Bifunctor
+  /** Maps the error with [f] and the valid value with [g]. */
+  fun <F, B> bimap(f: (E) -> F, g: (A) -> B): Validated<F, B> = bifunctor.bimap(f, g, this)
+  /** Maps the error with [f]. */
+  infix fun <F> first(f: (E) -> F): Validated<F, A> = bifunctor.first(f, this)
+  /** Maps the valid value with [g]. */
+  infix fun <B> second(g: (A) -> B): Validated<E, B> = bifunctor.second(g, this)
+  private val bifunctor = object: ValidatedBifunctor {}
+
+  // Bitraversable
+  /** Applies the effectful [f] to the error or [g] to the valid value and collects the result inside [G]. */
+  fun <G, F, B> bitraverse(applicative: Applicative<G>, f: (E) -> K1<G, F>, g: (A) -> K1<G, B>): K1<G, K2<T, F, B>> = bitraversable.bitraverse(applicative, f, g, this)
+  private val bitraversable = object: ValidatedBitraversable {}
 
   /** Converts [Valid] to `Right` and [Invalid] to `Left`. */
   fun toEither(): Either<E, A> = when (this) {
