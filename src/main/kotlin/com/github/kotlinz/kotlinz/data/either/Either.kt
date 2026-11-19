@@ -2,6 +2,7 @@ package com.github.kotlinz.kotlinz.data.either
 
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
+import com.github.kotlinz.kotlinz.data.maybe.Maybe
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
@@ -14,6 +15,10 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * Right-biased: [fmap], [ap] and [bind] act on the [Right] value and pass a [Left] through unchanged.
  *
  * Instances: Functor, Applicative, Selective, Monad, MonadError (error type `L`), Foldable, Traversable and Bifunctor.
+
+ * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor, Bifoldable and, for a monoidal left type, Filterable and Witherable.
+
+ * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor, Bifoldable and Bitraversable.
  *
  * ```kotlin
  * val parse = { s: String -> s.toIntOrNull()?.let { Either.Right<String, Int>(it) } ?: Either.Left("not a number: $s") }
@@ -25,9 +30,9 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
   class T
 
   /** The left (failure) case holding [value]. */
-  class Left<L, R>(val value: L): Either<L, R>()
+  data class Left<L, R>(val value: L): Either<L, R>()
   /** The right (success) case holding [value]. */
-  class Right<L, R>(val value: R): Either<L, R>()
+  data class Right<L, R>(val value: R): Either<L, R>()
 
   companion object {
     /** Downcasts a higher-kinded representation back to [Either]. */
@@ -64,6 +69,11 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
     /** Turns an [Either] of an effect into an effect of an [Either]. */
     fun <L, G, R> sequence(applicative: Applicative<G>, v: K1<K1<T, L>, K1<G, R>>): K1<G, K1<K1<T, L>, R>> = traversable<L>().sequence(applicative, v)
     private fun <L> traversable() = object: EitherTraversable<L> {}
+
+    // Bitraversable
+    /** Turns an [Either] of effects on both sides into an effect of an [Either]. */
+    fun <G, L, R> bisequence(applicative: Applicative<G>, v: K2<T, K1<G, L>, K1<G, R>>): K1<G, K2<T, L, R>> = bitraversable.bisequence(applicative, v)
+    private val bitraversable = object: EitherBitraversable {}
 
     // MonadError
     /** Creates a [Left] holding the error [e]. */
@@ -117,6 +127,20 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
   infix fun <S> second(g: (R) -> S): Either<L, S> = bifunctor.second(g, this)
   private val bifunctor = object: EitherBifunctor {}
 
+  // Bifoldable
+  /** Left-folds the [Left] value with [f] or the [Right] value with [g]. */
+  fun <C> bifoldLeft(initial: C, f: (C, L) -> C, g: (C, R) -> C): C = bifoldable.bifoldLeft(initial, f, g, this)
+  /** Right-folds the [Left] value with [f] or the [Right] value with [g]. */
+  fun <C> bifoldRight(initial: C, f: (L, C) -> C, g: (R, C) -> C): C = bifoldable.bifoldRight(initial, f, g, this)
+  /** Maps the [Left] value with [f] or the [Right] value with [g] into the monoid [M]. */
+  fun <M: Monoid<*, M>> bifoldMap(type: Class<M>, f: (L) -> M, g: (R) -> M): M = bifoldable.bifoldMap(type, f, g, this)
+  private val bifoldable = object: EitherBifoldable {}
+
+  // Bitraversable
+  /** Applies the effectful [f] to the [Left] value or [g] to the [Right] value and collects the result inside [G]. */
+  fun <G, M, S> bitraverse(applicative: Applicative<G>, f: (L) -> K1<G, M>, g: (R) -> K1<G, S>): K1<G, K2<T, M, S>> = bitraversable.bitraverse(applicative, f, g, this)
+  private val bitraversable = object: EitherBitraversable {}
+
   override fun equals(other: Any?): Boolean {
     return when {
       this is Left && other is Left<*, *> -> this.value == other.value
@@ -125,3 +149,18 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
     }
   }
 }
+
+// Filterable / Witherable
+/** Maps the [Either.Right] value with [f]; a [Maybe.None] result becomes `Left(mzero)` of [type]. */
+fun <L: Monoid<*, L>, R, S> Either<L, R>.mapFilter(type: Class<L>, f: (R) -> Maybe<S>): Either<L, S> = witherable(type).mapFilter(f, this)
+/** Keeps the [Either.Right] value only when it satisfies [p], otherwise yields `Left(mzero)` of [type]. */
+fun <L: Monoid<*, L>, R> Either<L, R>.filter(type: Class<L>, p: (R) -> Boolean): Either<L, R> = witherable(type).filter(p, this)
+/** Maps the [Either.Right] value with the partial function [f]; a `null` result becomes `Left(mzero)` of [type]. */
+fun <L: Monoid<*, L>, R, S: Any> Either<L, R>.collect(type: Class<L>, f: (R) -> S?): Either<L, S> = witherable(type).collect(f, this)
+/** Runs the effectful [f] on the [Either.Right] value; a [Maybe.None] result becomes `Left(mzero)` of [type]. */
+fun <L: Monoid<*, L>, R, G, S> Either<L, R>.wither(type: Class<L>, applicative: Applicative<G>, f: (R) -> K1<G, Maybe<S>>): K1<G, K1<K1<Either.T, L>, S>> =
+  witherable(type).wither(applicative, f, this)
+/** Keeps the [Either.Right] value only when the effectful predicate [p] yields true, otherwise yields `Left(mzero)` of [type]. */
+fun <L: Monoid<*, L>, R, G> Either<L, R>.filterA(type: Class<L>, applicative: Applicative<G>, p: (R) -> K1<G, Boolean>): K1<G, K1<K1<Either.T, L>, R>> =
+  witherable(type).filterA(applicative, p, this)
+private fun <L: Monoid<*, L>> witherable(type: Class<L>) = object: EitherWitherable<L> { override val type = type }

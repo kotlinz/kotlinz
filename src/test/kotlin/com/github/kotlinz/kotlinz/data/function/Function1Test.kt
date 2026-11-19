@@ -1,8 +1,18 @@
 package com.github.kotlinz.kotlinz.data.function
 
+import com.github.kotlinz.kotlinz.K3
+import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.law.ApplicativeLaw
+import com.github.kotlinz.kotlinz.data.listk.ListKTraversable
+import com.github.kotlinz.kotlinz.data.listk.listKOf
+import com.github.kotlinz.kotlinz.law.ChoiceLaw
+import com.github.kotlinz.kotlinz.law.ClosedLaw
+import com.github.kotlinz.kotlinz.law.CochoiceLaw
 import com.github.kotlinz.kotlinz.law.FunctorLaw
 import com.github.kotlinz.kotlinz.law.ProfunctorLaw
+import com.github.kotlinz.kotlinz.law.StrongLaw
+import com.github.kotlinz.kotlinz.law.TraversingLaw
+import com.github.kotlinz.kotlinz.law.listWander
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 
@@ -86,5 +96,74 @@ class Function1Test : DescribeSpec({
                 m.second<String>()(Pair("x", 1)) shouldBe Pair("x", 4)
             }
         }
+
+        context("as Strong") {
+            val strong = object : Function1Strong {}
+
+            it("should satisfy laws") { StrongLaw(strong, ::observeFunction1).assertSatisfyingStrongLaw(m) }
+            it("should apply to one component") { strong.second<Int, Int, String>(m)(Pair("x", 1)) shouldBe Pair("x", 4) }
+        }
+
+        context("as Choice") {
+            val choice = object : Function1Choice {}
+
+            it("should satisfy laws") { ChoiceLaw(choice, ::observeFunction1).assertSatisfyingChoiceLaw(m) }
+
+            it("should apply to one branch") {
+                choice.left<Int, Int, String>(m)(Either.Left(1)) shouldBe Either.Left<Int, String>(4)
+                choice.right<Int, Int, String>(m)(Either.Left("x")) shouldBe Either.Left<String, Int>("x")
+            }
+        }
+
+        context("as Closed") {
+            val closed = object : Function1Closed {}
+
+            @Suppress("UNCHECKED_CAST")
+            val asFunction = { out: Any? -> out as (Any?) -> Any? }
+
+            it("should satisfy laws") { ClosedLaw(closed, ::observeFunction1, asFunction).assertSatisfyingClosedLaw(m) }
+            it("should post-compose") { closed.closed<Int, Int, String>(m)({ s: String -> s.length })("ab") shouldBe 5 }
+        }
+
+        context("as Traversing") {
+            val traversing = object : Function1Traversing {}
+
+            it("should satisfy laws") { TraversingLaw(traversing, ::observeFunction1).assertSatisfyingTraversingLaw(m) }
+
+            it("should map every focus") {
+                traversing.wander(listWander<Int, Int>(), m)(listOf(1, 2)) shouldBe listOf(4, 5)
+                Function1.narrow(traversing.traverse(object : ListKTraversable {}, m))(listKOf(1)) shouldBe listKOf(4)
+            }
+        }
+
+        context("as Cochoice") {
+            val cochoice = object : Function1Cochoice {}
+            val v = Function1 { e: Either<Int, Int> ->
+                when (e) {
+                    is Either.Left -> if (e.value > 0) Either.Right(e.value) else Either.Left(e.value * 10)
+                    is Either.Right -> if (e.value > 0) Either.Right(e.value - 1) else Either.Left<Int, Int>(e.value + 100)
+                }
+            }
+            val w = Function1<Either<Either<Int, Int>, Int>, Either<Either<Int, Int>, Int>> { e ->
+                val n = if (e is Either.Left && e.value is Either.Left) (e.value as Either.Left).value * 2 else 0
+                Either.Left<Either<Int, Int>, Int>(Either.Left(n))
+            }
+
+            it("should satisfy laws") { CochoiceLaw(cochoice, ::observeFunction1).assertSatisfyingCochoiceLaw(v, w) }
+
+            it("should feed the carried branch back until it is done") {
+                val countdown = Function1 { e: Either<Int, Int> ->
+                    when (e) {
+                        is Either.Left -> Either.Right<String, Int>(e.value)
+                        is Either.Right -> if (e.value == 0) Either.Left("done") else Either.Right(e.value - 1)
+                    }
+                }
+                cochoice.unleft(countdown)(3) shouldBe "done"
+                cochoice.unleft((object : Function1Choice {}).left<Int, Int, Int>(m))(2) shouldBe 5
+            }
+        }
     }
 })
+
+@Suppress("UNCHECKED_CAST")
+private fun observeFunction1(v: K3<Function1.T, Unit, *, *>): (Any?) -> Any? = (v as Function1<Any?, Any?>).run

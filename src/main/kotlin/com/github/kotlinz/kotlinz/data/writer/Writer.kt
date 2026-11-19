@@ -89,5 +89,10 @@ class Writer<W: Monoid<*, W>, A> (val type: Class<W>, val run: Pair<A, W>) : K2<
     /** Maps the value. */
     infix fun <B> second(g: (A) -> B): Writer<W, B> = narrow(bifunctor.second(g, this))
     private val bifunctor = object: WriterBifunctor {}
+
+    /** Two writers are equal when their `(value, log)` pairs are equal. */
+    override fun equals(other: Any?): Boolean = other is Writer<*, *> && run == other.run
+    override fun hashCode(): Int = run.hashCode()
+    override fun toString(): String = "Writer(run=$run)"
 }
 

@@ -1,6 +1,7 @@
 package com.github.kotlinz.kotlinz.data.listk
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.data.ior.Ior
 import com.github.kotlinz.kotlinz.data.maybe.Maybe
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fxReplay
@@ -13,7 +14,9 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * Use it when you need a list as a `K1` to pass to generic type-class code, or want list-monad
  * style "all combinations" composition via `bind`.
  *
- * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, MonadZip, Foldable, Traversable.
+ * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, MonadZip, Foldable, Traversable, Filterable, Witherable.
+
+ * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, MonadZip, Foldable, Traversable, Semialign, Align, Zip.
  *
  * ```kotlin
  * val pairs = listKOf(1, 2) bind { a -> listKOf("x", "y") fmap { b -> a to b } }
@@ -80,6 +83,16 @@ data class ListK<A>(val value: List<A>): K1<ListK.T, A> {
     /** Turns a list of `G` effects into a `G` effect of a list. */
     fun <G, A> sequence(applicative: Applicative<G>, v: K1<T, K1<G, A>>): K1<G, K1<T, A>> = traversable.sequence(applicative, v)
     private val traversable = object: ListKTraversable {}
+
+    // Filterable
+    /** Keeps the values of the [Maybe.Just] elements and drops the [Maybe.None] ones. */
+    fun <A> catMaybes(v: K1<T, Maybe<A>>): ListK<A> = filterable.catMaybes(v)
+    private val filterable = object: ListKFilterable {}
+
+    // Align
+    /** Returns the empty list, the identity of [align]. */
+    fun <A> nil(): ListK<A> = align.nil()
+    private val align = object: ListKAlign {}
   }
 
   // Monad
@@ -105,6 +118,19 @@ data class ListK<A>(val value: List<A>): K1<ListK.T, A> {
   fun <G, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable.traverse(applicative, f, this)
   private val traversable = object: ListKTraversable {}
 
+  // Filterable / Witherable
+  /** Maps every element with [f], keeping only the [Maybe.Just] results. */
+  infix fun <B> mapFilter(f: (A) -> Maybe<B>): ListK<B> = witherable.mapFilter(f, this)
+  /** Keeps only the elements satisfying [p]. */
+  infix fun filter(p: (A) -> Boolean): ListK<A> = witherable.filter(p, this)
+  /** Maps every element with the partial function [f], dropping the elements it maps to `null`. */
+  infix fun <B: Any> collect(f: (A) -> B?): ListK<B> = witherable.collect(f, this)
+  /** Runs the effectful [f] on every element, keeping the [Maybe.Just] results inside the effect. */
+  fun <G, B> wither(applicative: Applicative<G>, f: (A) -> K1<G, Maybe<B>>): K1<G, K1<T, B>> = witherable.wither(applicative, f, this)
+  /** Keeps only the elements for which the effectful predicate [p] yields true. */
+  fun <G> filterA(applicative: Applicative<G>, p: (A) -> K1<G, Boolean>): K1<G, K1<T, A>> = witherable.filterA(applicative, p, this)
+  private val witherable = object: ListKWitherable {}
+
   // MonadPlus
   /** Concatenates this list with [m]. */
   infix fun mplus(m: K1<T, A>): ListK<A> = monadPlus.mplus(this, m)
@@ -123,6 +149,17 @@ data class ListK<A>(val value: List<A>): K1<ListK.T, A> {
   /** Zips this list with [m] using [f], truncating to the shorter one. */
   fun <B, C> mzipWith(m: K1<T, B>, f: (A, B) -> C): ListK<C> = monadZip.mzipWith(this, m, f)
   private val monadZip = object: ListKMonadZip {}
+
+  // Semialign / Zip
+  /** Pairs this list with [m] by index, keeping the leftover elements of the longer one. */
+  infix fun <B> align(m: K1<T, B>): ListK<Ior<A, B>> = zip.align(this, m)
+  /** Combines this list with [m] by index using [f], keeping the leftover elements of the longer one. */
+  fun <B, C> alignWith(m: K1<T, B>, f: (Ior<A, B>) -> C): ListK<C> = zip.alignWith(f, this, m)
+  /** Pairs this list with [m] by index, truncating to the shorter one. */
+  infix fun <B> zip(m: K1<T, B>): ListK<Pair<A, B>> = zip.zip(this, m)
+  /** Combines this list with [m] by index using [f], truncating to the shorter one. */
+  fun <B, C> zipWith(m: K1<T, B>, f: (A, B) -> C): ListK<C> = zip.zipWith(f, this, m)
+  private val zip = object: ListKZip {}
 }
 
 /** Wraps this [List] in a [ListK]. */

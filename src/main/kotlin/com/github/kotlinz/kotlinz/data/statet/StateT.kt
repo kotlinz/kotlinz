@@ -3,15 +3,19 @@ package com.github.kotlinz.kotlinz.data.statet
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.K3
+import com.github.kotlinz.kotlinz.data.io.IO
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.monad.Monad
+import com.github.kotlinz.kotlinz.type.monad.MonadIO
+import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
 
 /**
  * State monad transformer: a function `S -> F<Pair<A, S>>` that threads state through an inner monad `F`.
  *
  * Use it when stateful steps also need another effect (failure via Maybe, side effects via IO, ...).
- * Has Functor, Applicative, Monad and MonadState instances, all parameterised by the inner [Monad].
+ * Has Functor, Applicative, Monad, MonadState and MonadTrans instances, all parameterised by the inner [Monad],
+ * plus MFunctor.
  *
  * ```kotlin
  * val identity = object : IdentityMonad {}
@@ -53,9 +57,11 @@ class StateT<F, S, A>(val monad: Monad<F>, val run: (S) -> K1<F, Pair<A, S>>) : 
 
         // Transformer
         /** Lifts an inner monadic value into StateT, leaving the state unchanged. */
-        fun <F, S, A> lift(monad: Monad<F>, v: K1<F, A>): StateT<F, S, A> = StateT(monad) { s -> monad.fmap({ a -> Pair(a, s) }, v) }
+        fun <F, S, A> lift(monad: Monad<F>, v: K1<F, A>): StateT<F, S, A> = instance<F, S>(monad).lift(v)
+        /** Lifts an [IO] computation through the base monad's MonadIO instance. */
+        fun <F, S, A> liftIO(monad: MonadIO<F>, v: IO<A>): StateT<F, S, A> = object: StateTMonadIO<F, S> { override val monad = monad }.liftIO(v)
 
-        private fun <F, S> instance(monad: Monad<F>) = object: StateTMonadState<F, S> { override val monad = monad }
+        private fun <F, S> instance(monad: Monad<F>) = object: StateTMonadState<F, S>, StateTMonadTrans<F, S> { override val monad = monad }
     }
 
     // Monad
@@ -70,6 +76,12 @@ class StateT<F, S, A>(val monad: Monad<F>, val run: (S) -> K1<F, Pair<A, S>>) : 
     fun eval(s: S): K1<F, A> = monad.fmap({ pair: Pair<A, S> -> pair.first }, run(s))
     /** Runs from initial state `s` and returns only the final state inside `F`. */
     fun exec(s: S): K1<F, S> = monad.fmap({ pair: Pair<A, S> -> pair.second }, run(s))
+
+    // MFunctor
+    /** Swaps the base monad using [nt]; [target] is the monad of the new base. */
+    fun <G> hoist(target: Monad<G>, nt: NaturalTransformation<F, G>): StateT<G, S, A> {
+        return object: StateTMFunctor<F, G, S> { override val target = target }.hoist(nt, this)
+    }
 
     private fun instance() = object: StateTMonadState<F, S> { override val monad = this@StateT.monad }
 }
