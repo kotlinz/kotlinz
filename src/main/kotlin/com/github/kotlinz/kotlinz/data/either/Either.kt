@@ -2,6 +2,7 @@ package com.github.kotlinz.kotlinz.data.either
 
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
+import com.github.kotlinz.kotlinz.data.maybe.Maybe
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
@@ -13,6 +14,8 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * Use it for computations that can fail with a typed error and should short-circuit on the first failure.
  * Right-biased: [fmap], [ap] and [bind] act on the [Right] value and pass a [Left] through unchanged.
  *
+ * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor, Bifoldable and, for a monoidal left type, Filterable and Witherable.
+
  * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor, Bifoldable and Bitraversable.
  *
  * ```kotlin
@@ -137,3 +140,18 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
     }
   }
 }
+
+// Filterable / Witherable
+/** Maps the [Either.Right] value with [f]; a [Maybe.None] result becomes `Left(mzero)` of [type]. */
+fun <L: Monoid<*, L>, R, S> Either<L, R>.mapFilter(type: Class<L>, f: (R) -> Maybe<S>): Either<L, S> = witherable(type).mapFilter(f, this)
+/** Keeps the [Either.Right] value only when it satisfies [p], otherwise yields `Left(mzero)` of [type]. */
+fun <L: Monoid<*, L>, R> Either<L, R>.filter(type: Class<L>, p: (R) -> Boolean): Either<L, R> = witherable(type).filter(p, this)
+/** Maps the [Either.Right] value with the partial function [f]; a `null` result becomes `Left(mzero)` of [type]. */
+fun <L: Monoid<*, L>, R, S: Any> Either<L, R>.collect(type: Class<L>, f: (R) -> S?): Either<L, S> = witherable(type).collect(f, this)
+/** Runs the effectful [f] on the [Either.Right] value; a [Maybe.None] result becomes `Left(mzero)` of [type]. */
+fun <L: Monoid<*, L>, R, G, S> Either<L, R>.wither(type: Class<L>, applicative: Applicative<G>, f: (R) -> K1<G, Maybe<S>>): K1<G, K1<K1<Either.T, L>, S>> =
+  witherable(type).wither(applicative, f, this)
+/** Keeps the [Either.Right] value only when the effectful predicate [p] yields true, otherwise yields `Left(mzero)` of [type]. */
+fun <L: Monoid<*, L>, R, G> Either<L, R>.filterA(type: Class<L>, applicative: Applicative<G>, p: (R) -> K1<G, Boolean>): K1<G, K1<K1<Either.T, L>, R>> =
+  witherable(type).filterA(applicative, p, this)
+private fun <L: Monoid<*, L>> witherable(type: Class<L>) = object: EitherWitherable<L> { override val type = type }
