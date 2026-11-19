@@ -1,6 +1,7 @@
 package com.github.kotlinz.kotlinz.data.listk
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.data.ior.Ior
 import com.github.kotlinz.kotlinz.data.maybe.Maybe
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fxReplay
@@ -13,7 +14,7 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * Use it when you need a list as a `K1` to pass to generic type-class code, or want list-monad
  * style "all combinations" composition via `bind`.
  *
- * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, MonadZip, Foldable, Traversable.
+ * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, MonadZip, Foldable, Traversable, Semialign, Align, Zip.
  *
  * ```kotlin
  * val pairs = listKOf(1, 2) bind { a -> listKOf("x", "y") fmap { b -> a to b } }
@@ -80,6 +81,11 @@ data class ListK<A>(val value: List<A>): K1<ListK.T, A> {
     /** Turns a list of `G` effects into a `G` effect of a list. */
     fun <G, A> sequence(applicative: Applicative<G>, v: K1<T, K1<G, A>>): K1<G, K1<T, A>> = traversable.sequence(applicative, v)
     private val traversable = object: ListKTraversable {}
+
+    // Align
+    /** Returns the empty list, the identity of [align]. */
+    fun <A> nil(): ListK<A> = align.nil()
+    private val align = object: ListKAlign {}
   }
 
   // Monad
@@ -123,6 +129,17 @@ data class ListK<A>(val value: List<A>): K1<ListK.T, A> {
   /** Zips this list with [m] using [f], truncating to the shorter one. */
   fun <B, C> mzipWith(m: K1<T, B>, f: (A, B) -> C): ListK<C> = monadZip.mzipWith(this, m, f)
   private val monadZip = object: ListKMonadZip {}
+
+  // Semialign / Zip
+  /** Pairs this list with [m] by index, keeping the leftover elements of the longer one. */
+  infix fun <B> align(m: K1<T, B>): ListK<Ior<A, B>> = zip.align(this, m)
+  /** Combines this list with [m] by index using [f], keeping the leftover elements of the longer one. */
+  fun <B, C> alignWith(m: K1<T, B>, f: (Ior<A, B>) -> C): ListK<C> = zip.alignWith(f, this, m)
+  /** Pairs this list with [m] by index, truncating to the shorter one. */
+  infix fun <B> zip(m: K1<T, B>): ListK<Pair<A, B>> = zip.zip(this, m)
+  /** Combines this list with [m] by index using [f], truncating to the shorter one. */
+  fun <B, C> zipWith(m: K1<T, B>, f: (A, B) -> C): ListK<C> = zip.zipWith(f, this, m)
+  private val zip = object: ListKZip {}
 }
 
 /** Wraps this [List] in a [ListK]. */
