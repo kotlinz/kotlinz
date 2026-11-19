@@ -7,6 +7,7 @@ import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.monad.Monad
+import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
 
 /**
  * Either monad transformer: an effect `F` that yields `Either<E, A>`.
@@ -14,7 +15,8 @@ import com.github.kotlinz.kotlinz.type.monad.Monad
  * Use it to add short-circuiting typed errors on top of another monad (e.g. `IO`) without
  * manually threading `Either` through every `bind`. A [Either.Left] stops the computation.
  *
- * Instances: Functor, Applicative, Monad and MonadError (error type `E`), all requiring a [Monad] for `F`.
+ * Instances: Functor, Applicative, Monad, MonadError (error type `E`) and MonadTrans, all requiring a [Monad] for `F`,
+ * plus MFunctor.
  *
  * ```kotlin
  * val io = object : IOMonad {}
@@ -48,11 +50,11 @@ class EitherT<F, E, A>(val monad: Monad<F>, val run: K1<F, Either<E, A>>) : K3<E
 
         // Transformer
         /** Lifts an effect [v] into [EitherT] as a success. */
-        fun <F, E, A> lift(monad: Monad<F>, v: K1<F, A>): EitherT<F, E, A> = EitherT(monad, monad.fmap({ a -> Either.Right<E, A>(a) }, v))
+        fun <F, E, A> lift(monad: Monad<F>, v: K1<F, A>): EitherT<F, E, A> = instance<F, E>(monad).lift(v)
         /** Lifts a pure [Either] into [EitherT]. */
         fun <F, E, A> fromEither(monad: Monad<F>, v: Either<E, A>): EitherT<F, E, A> = EitherT(monad, monad.pure(v))
 
-        private fun <F, E> instance(monad: Monad<F>) = object: EitherTMonadError<F, E> { override val monad = monad }
+        private fun <F, E> instance(monad: Monad<F>) = object: EitherTMonadError<F, E>, EitherTMonadTrans<F, E> { override val monad = monad }
     }
 
     // Monad
@@ -68,6 +70,12 @@ class EitherT<F, E, A>(val monad: Monad<F>, val run: K1<F, Either<E, A>>) : K3<E
     infix fun handleErrorWith(f: (E) -> EitherT<F, E, A>): EitherT<F, E, A> = instance().handleErrorWith(f, this)
     /** Recovers from an error by mapping it to a success value. */
     infix fun handleError(f: (E) -> A): EitherT<F, E, A> = narrow(instance().handleError(f, this))
+
+    // MFunctor
+    /** Swaps the base monad using [nt]; [target] is the monad of the new base. */
+    fun <G> hoist(target: Monad<G>, nt: NaturalTransformation<F, G>): EitherT<G, E, A> {
+        return object: EitherTMFunctor<F, G, E> { override val target = target }.hoist(nt, this)
+    }
 
     private fun instance() = object: EitherTMonadError<F, E> { override val monad = this@EitherT.monad }
 }
