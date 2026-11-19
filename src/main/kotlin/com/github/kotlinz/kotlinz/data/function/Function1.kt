@@ -15,7 +15,7 @@ import com.github.kotlinz.kotlinz.syntax.fx
  *
  * Instances: [Function1Functor], [Function1Applicative], [Function1ApplicativeOps],
  * [Function1Monad], [Function1MonadOps], [Function1Compose], [Function1Category],
- * [Function1Arrow], [Function1Profunctor].
+ * [Function1Arrow], [Function1Profunctor], [Function1Strong], [Function1Choice].
  *
  * ```kotlin
  * val m = Function1 { r: Int -> r + 3 }
