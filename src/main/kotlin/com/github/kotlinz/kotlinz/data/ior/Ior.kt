@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
+import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.group.Semigroup
 
 /**
@@ -13,7 +14,7 @@ import com.github.kotlinz.kotlinz.type.group.Semigroup
  * successful result. Left values are accumulated with a [Semigroup], and computation stops
  * only on a pure [Left].
  *
- * Instances: [IorFunctor], [IorBifunctor], and — given a Semigroup class for the left
+ * Instances: [IorFunctor], [IorBifunctor], [IorBifoldable], and — given a Semigroup class for the left
  * type — [IorApplicative], [IorApplicativeOps], [IorMonad], [IorMonadOps].
  *
  * ```kotlin
@@ -84,6 +85,15 @@ sealed class Ior<A, B>: K2<Ior.T, A, B> {
   /** Maps the right value, if any. */
   infix fun <D> second(g: (B) -> D): Ior<A, D> = bifunctor.second(g, this)
   private val bifunctor = object: IorBifunctor {}
+
+  // Bifoldable
+  /** Left-folds the left value with [f] and the right value with [g], left first. */
+  fun <C> bifoldLeft(initial: C, f: (C, A) -> C, g: (C, B) -> C): C = bifoldable.bifoldLeft(initial, f, g, this)
+  /** Right-folds the left value with [f] and the right value with [g], left first. */
+  fun <C> bifoldRight(initial: C, f: (A, C) -> C, g: (B, C) -> C): C = bifoldable.bifoldRight(initial, f, g, this)
+  /** Maps the left value with [f] and the right value with [g] into the monoid [M] and combines them. */
+  fun <M: Monoid<*, M>> bifoldMap(type: Class<M>, f: (A) -> M, g: (B) -> M): M = bifoldable.bifoldMap(type, f, g, this)
+  private val bifoldable = object: IorBifoldable {}
 }
 
 // Monad

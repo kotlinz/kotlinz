@@ -3,6 +3,7 @@ package com.github.kotlinz.kotlinz.data.validated
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.data.either.Either
+import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.group.Semigroup
 
 /**
@@ -13,7 +14,7 @@ import com.github.kotlinz.kotlinz.type.group.Semigroup
  * form or config validation where every problem should be reported. It intentionally has no Monad
  * instance, because `bind` cannot accumulate errors.
  *
- * Instances: [ValidatedFunctor], [ValidatedApplicative], [ValidatedApplicativeOps] (the latter two
+ * Instances: [ValidatedFunctor], [ValidatedBifoldable], [ValidatedApplicative], [ValidatedApplicativeOps] (the latter two
  * require a Semigroup error type).
  *
  * ```kotlin
@@ -66,6 +67,15 @@ sealed class Validated<E, A>: K2<Validated.T, E, A> {
   /** Maps the valid value. */
   infix fun <B> fmap(f: (A) -> B): Validated<E, B> = functor.fmap(f, this)
   private val functor = object: ValidatedFunctor<E> {}
+
+  // Bifoldable
+  /** Left-folds the error with [f] or the valid value with [g]. */
+  fun <C> bifoldLeft(initial: C, f: (C, E) -> C, g: (C, A) -> C): C = bifoldable.bifoldLeft(initial, f, g, this)
+  /** Right-folds the error with [f] or the valid value with [g]. */
+  fun <C> bifoldRight(initial: C, f: (E, C) -> C, g: (A, C) -> C): C = bifoldable.bifoldRight(initial, f, g, this)
+  /** Maps the error with [f] or the valid value with [g] into the monoid [M]. */
+  fun <M: Monoid<*, M>> bifoldMap(type: Class<M>, f: (E) -> M, g: (A) -> M): M = bifoldable.bifoldMap(type, f, g, this)
+  private val bifoldable = object: ValidatedBifoldable {}
 
   /** Converts [Valid] to `Right` and [Invalid] to `Left`. */
   fun toEither(): Either<E, A> = when (this) {

@@ -13,7 +13,7 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * Use it for computations that can fail with a typed error and should short-circuit on the first failure.
  * Right-biased: [fmap], [ap] and [bind] act on the [Right] value and pass a [Left] through unchanged.
  *
- * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable and Bifunctor.
+ * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor and Bifoldable.
  *
  * ```kotlin
  * val parse = { s: String -> s.toIntOrNull()?.let { Either.Right<String, Int>(it) } ?: Either.Left("not a number: $s") }
@@ -109,4 +109,21 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
   /** Maps the [Right] value with [g]. */
   infix fun <S> second(g: (R) -> S): Either<L, S> = bifunctor.second(g, this)
   private val bifunctor = object: EitherBifunctor {}
+
+  // Bifoldable
+  /** Left-folds the [Left] value with [f] or the [Right] value with [g]. */
+  fun <C> bifoldLeft(initial: C, f: (C, L) -> C, g: (C, R) -> C): C = bifoldable.bifoldLeft(initial, f, g, this)
+  /** Right-folds the [Left] value with [f] or the [Right] value with [g]. */
+  fun <C> bifoldRight(initial: C, f: (L, C) -> C, g: (R, C) -> C): C = bifoldable.bifoldRight(initial, f, g, this)
+  /** Maps the [Left] value with [f] or the [Right] value with [g] into the monoid [M]. */
+  fun <M: Monoid<*, M>> bifoldMap(type: Class<M>, f: (L) -> M, g: (R) -> M): M = bifoldable.bifoldMap(type, f, g, this)
+  private val bifoldable = object: EitherBifoldable {}
+
+  override fun equals(other: Any?): Boolean {
+    return when {
+      this is Left && other is Left<*, *> -> this.value == other.value
+      this is Right && other is Right<*, *> -> this.value == other.value
+      else -> false
+    }
+  }
 }

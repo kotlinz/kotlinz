@@ -13,7 +13,7 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * environment. When `S` is a [com.github.kotlinz.kotlinz.type.group.Monoid] it is also a writer-like
  * monad that accumulates `first`. Use it when you need a pair that participates in type class code.
  *
- * Instances: [Tuple2Functor], [Tuple2Copointed], [Tuple2Comonad], [Tuple2Bifunctor] and, for a
+ * Instances: [Tuple2Functor], [Tuple2Copointed], [Tuple2Comonad], [Tuple2Bifunctor], [Tuple2Bifoldable] and, for a
  * monoidal first component, [Tuple2Applicative], [Tuple2Monad], [Tuple2ApplicativeOps], [Tuple2MonadOps].
  *
  * ```kotlin
@@ -77,6 +77,15 @@ data class Tuple2<A, B>(val first: A, val second: B): K2<Tuple2.T, A, B> {
   /** Maps both components. */
   fun <C, D> bimap(f: (A) -> C, g: (B) -> D): Tuple2<C, D> = bifunctor.bimap(f, g, this)
   private val bifunctor = object: Tuple2Bifunctor {}
+
+  // Bifoldable
+  /** Left-folds [first] with [f], then [second] with [g]. */
+  fun <C> bifoldLeft(initial: C, f: (C, A) -> C, g: (C, B) -> C): C = bifoldable.bifoldLeft(initial, f, g, this)
+  /** Right-folds [first] with [f] and [second] with [g]. */
+  fun <C> bifoldRight(initial: C, f: (A, C) -> C, g: (B, C) -> C): C = bifoldable.bifoldRight(initial, f, g, this)
+  /** Maps both components into the monoid [M] and combines them. */
+  fun <M: Monoid<*, M>> bifoldMap(type: Class<M>, f: (A) -> M, g: (B) -> M): M = bifoldable.bifoldMap(type, f, g, this)
+  private val bifoldable = object: Tuple2Bifoldable {}
 
   /** Converts to a Kotlin [Pair]. */
   fun toPair(): Pair<A, B> = Pair(first, second)
