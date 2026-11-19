@@ -16,7 +16,8 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * makes `Chain` a good fit for accumulating output (logs, writer monoids) piece by piece.
  * Iteration, [size] and [uncons] never recurse, so very deep chains are stack safe.
  *
- * Instances: Functor, Applicative, Monad, Foldable, Traversable, Semialign, Align, Zip, and [Monoid]
+ * Instances: Functor, Applicative, Monad, Foldable, Traversable, Semialign, Align, Zip, Filterable,
+ * Witherable, and [Monoid]
  * (concatenation, with the public no-arg constructor creating the empty chain).
  *
  * ```kotlin
@@ -63,6 +64,7 @@ class Chain<A> internal constructor(internal val node: ChainNode<A>): K1<Chain.T
 
     private val monad = object: ChainMonad {}
     private val traversable = object: ChainTraversable {}
+    private val witherable = object: ChainWitherable {}
     private val zip = object: ChainZip, ChainAlign {}
   }
 
@@ -110,6 +112,18 @@ class Chain<A> internal constructor(internal val node: ChainNode<A>): K1<Chain.T
   // Traversable
   /** Applies an effectful [f] to each element and collects the results inside [applicative]. */
   fun <G, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable.traverse(applicative, f, this)
+
+  // Filterable / Witherable
+  /** Maps every element with [f], keeping only the [Maybe.Just] results. */
+  infix fun <B> mapFilter(f: (A) -> Maybe<B>): Chain<B> = witherable.mapFilter(f, this)
+  /** Keeps only the elements satisfying [p]. */
+  infix fun filter(p: (A) -> Boolean): Chain<A> = witherable.filter(p, this)
+  /** Maps every element with the partial function [f], dropping the elements it maps to `null`. */
+  infix fun <B: Any> collect(f: (A) -> B?): Chain<B> = witherable.collect(f, this)
+  /** Runs the effectful [f] on every element, keeping the [Maybe.Just] results inside the effect. */
+  fun <G, B> wither(applicative: Applicative<G>, f: (A) -> K1<G, Maybe<B>>): K1<G, K1<T, B>> = witherable.wither(applicative, f, this)
+  /** Keeps only the elements for which the effectful predicate [p] yields true. */
+  fun <G> filterA(applicative: Applicative<G>, p: (A) -> K1<G, Boolean>): K1<G, K1<T, A>> = witherable.filterA(applicative, p, this)
 
   // Semialign / Zip
   /** Pairs this chain with [m] by index, keeping the leftover elements of the longer one. */

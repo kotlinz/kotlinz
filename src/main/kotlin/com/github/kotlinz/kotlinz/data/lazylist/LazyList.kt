@@ -16,7 +16,7 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * element ([foldl], [traverse], [toList], [equals], [hashCode]) only terminate on finite lists.
  *
  * Instances: Functor, Applicative, Monad, Alternative, Foldable, Traversable (finite lists),
- * Semialign, Align, Zip.
+ * Semialign, Align, Zip, Filterable, Witherable (finite lists).
  *
  * ```kotlin
  * val naturals = LazyList.iterate(0) { it + 1 }
@@ -80,6 +80,7 @@ class LazyList<A> private constructor(private val cell: Lazy<Cell<A>>): K1<LazyL
     private val monad = object: LazyListMonad {}
     private val alternative = object: LazyListAlternative {}
     private val traversable = object: LazyListTraversable {}
+    private val witherable = object: LazyListWitherable {}
     private val zip = object: LazyListZip, LazyListAlign {}
   }
 
@@ -128,6 +129,18 @@ class LazyList<A> private constructor(private val cell: Lazy<Cell<A>>): K1<LazyL
   // Traversable
   /** Applies an effectful [f] to each element of a finite list and collects the results inside [applicative]. */
   fun <G, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable.traverse(applicative, f, this)
+
+  // Filterable / Witherable
+  /** Maps every element with [f] lazily, keeping only the [Maybe.Just] results. */
+  infix fun <B> mapFilter(f: (A) -> Maybe<B>): LazyList<B> = witherable.mapFilter(f, this)
+  /** Keeps only the elements satisfying [p] lazily. */
+  infix fun filter(p: (A) -> Boolean): LazyList<A> = witherable.filter(p, this)
+  /** Maps every element with the partial function [f] lazily, dropping the elements it maps to `null`. */
+  infix fun <B: Any> collect(f: (A) -> B?): LazyList<B> = witherable.collect(f, this)
+  /** Runs the effectful [f] on every element, keeping the [Maybe.Just] results inside the effect. */
+  fun <G, B> wither(applicative: Applicative<G>, f: (A) -> K1<G, Maybe<B>>): K1<G, K1<T, B>> = witherable.wither(applicative, f, this)
+  /** Keeps only the elements for which the effectful predicate [p] yields true. */
+  fun <G> filterA(applicative: Applicative<G>, p: (A) -> K1<G, Boolean>): K1<G, K1<T, A>> = witherable.filterA(applicative, p, this)
 
   // Semialign / Zip
   /** Pairs this list with [m] by index lazily, keeping the leftover elements of the longer one. */

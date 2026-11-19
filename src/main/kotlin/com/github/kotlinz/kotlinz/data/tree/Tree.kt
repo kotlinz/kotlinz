@@ -5,7 +5,9 @@ import com.github.kotlinz.kotlinz.data.ior.Ior
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fxReplay
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
+import com.github.kotlinz.kotlinz.type.applicative.Apply
 import com.github.kotlinz.kotlinz.type.group.Monoid
+import com.github.kotlinz.kotlinz.type.group.Semigroup
 
 /**
  * A rose tree: a [root] value with an ordered list of [children] subtrees.
@@ -14,7 +16,8 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * right). As a comonad, [duplicate] replaces every node with the subtree rooted at it.
  * Operations recurse once per tree level, so extremely deep trees may exhaust the stack.
  *
- * Instances: Functor, Applicative, Monad, Foldable, Traversable, Copointed, Comonad, Semialign, Zip.
+ * Instances: Functor, Applicative, Monad, Foldable, Foldable1, Traversable, Traversable1, Copointed, Comonad,
+ * Semialign, Zip.
  *
  * ```kotlin
  * val t = tree(1, tree(2, Tree.leaf(4)), Tree.leaf(3))
@@ -51,7 +54,7 @@ data class Tree<A>(val root: A, val children: List<Tree<A>> = listOf()): K1<Tree
     fun <G, A> sequence(applicative: Applicative<G>, v: K1<T, K1<G, A>>): K1<G, K1<T, A>> = traversable.sequence(applicative, v)
 
     private val monad = object: TreeMonad {}
-    private val traversable = object: TreeTraversable {}
+    private val traversable = object: TreeTraversable1 {}
     private val comonad = object: TreeComonad {}
     private val zip = object: TreeZip {}
   }
@@ -84,6 +87,14 @@ data class Tree<A>(val root: A, val children: List<Tree<A>> = listOf()): K1<Tree
   // Traversable
   /** Applies an effectful [f] to each node in pre-order and collects the results inside [applicative]. */
   fun <G, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable.traverse(applicative, f, this)
+
+  // Foldable1 / Traversable1
+  /** Reduces the nodes in pre-order without an initial value. */
+  fun reduceLeft(f: (A, A) -> A): A = traversable.reduceLeft(f, this)
+  /** Maps each node into the Semigroup [type] and combines the results in pre-order. */
+  fun <S: Semigroup<*, S>> reduceMap(type: Class<S>, f: (A) -> S): S = traversable.reduceMap(type, f, this)
+  /** Like [traverse], but only needs an [Apply] because a tree is never empty. */
+  fun <G, B> traverse1(apply: Apply<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable.traverse1(apply, f, this)
 
   // Comonad
   /** Returns the [root]. */
