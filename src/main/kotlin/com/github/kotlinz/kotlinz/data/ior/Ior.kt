@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
+import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.group.Semigroup
 
@@ -14,7 +15,7 @@ import com.github.kotlinz.kotlinz.type.group.Semigroup
  * successful result. Left values are accumulated with a [Semigroup], and computation stops
  * only on a pure [Left].
  *
- * Instances: [IorFunctor], [IorBifunctor], [IorBifoldable], and — given a Semigroup class for the left
+ * Instances: [IorFunctor], [IorBifunctor], [IorBifoldable], [IorBitraversable], and — given a Semigroup class for the left
  * type — [IorApplicative], [IorApplicativeOps], [IorMonad], [IorMonadOps].
  *
  * ```kotlin
@@ -43,6 +44,11 @@ sealed class Ior<A, B>: K2<Ior.T, A, B> {
     fun <A, B> right(v: B): Ior<A, B> = Right(v)
     /** Creates a [Both]. */
     fun <A, B> both(a: A, b: B): Ior<A, B> = Both(a, b)
+
+    // Bitraversable
+    /** Turns an [Ior] of effects on both sides into an effect of an [Ior]. */
+    fun <G, A, B> bisequence(applicative: Applicative<G>, v: K2<T, K1<G, A>, K1<G, B>>): K1<G, K2<T, A, B>> = bitraversable.bisequence(applicative, v)
+    private val bitraversable = object: IorBitraversable {}
 
     // Monad
     /** Wraps a value in [Right]. */
@@ -94,6 +100,11 @@ sealed class Ior<A, B>: K2<Ior.T, A, B> {
   /** Maps the left value with [f] and the right value with [g] into the monoid [M] and combines them. */
   fun <M: Monoid<*, M>> bifoldMap(type: Class<M>, f: (A) -> M, g: (B) -> M): M = bifoldable.bifoldMap(type, f, g, this)
   private val bifoldable = object: IorBifoldable {}
+
+  // Bitraversable
+  /** Applies the effectful [f] to the left value and [g] to the right value, left first, and collects the result inside [G]. */
+  fun <G, C, D> bitraverse(applicative: Applicative<G>, f: (A) -> K1<G, C>, g: (B) -> K1<G, D>): K1<G, K2<T, C, D>> = bitraversable.bitraverse(applicative, f, g, this)
+  private val bitraversable = object: IorBitraversable {}
 }
 
 // Monad

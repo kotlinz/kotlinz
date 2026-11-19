@@ -4,6 +4,7 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
+import com.github.kotlinz.kotlinz.type.applicative.Applicative
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
 /**
@@ -13,7 +14,7 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * environment. When `S` is a [com.github.kotlinz.kotlinz.type.group.Monoid] it is also a writer-like
  * monad that accumulates `first`. Use it when you need a pair that participates in type class code.
  *
- * Instances: [Tuple2Functor], [Tuple2Copointed], [Tuple2Comonad], [Tuple2Bifunctor], [Tuple2Bifoldable] and, for a
+ * Instances: [Tuple2Functor], [Tuple2Copointed], [Tuple2Comonad], [Tuple2Bifunctor], [Tuple2Bifoldable], [Tuple2Bitraversable] and, for a
  * monoidal first component, [Tuple2Applicative], [Tuple2Monad], [Tuple2ApplicativeOps], [Tuple2MonadOps].
  *
  * ```kotlin
@@ -31,6 +32,11 @@ data class Tuple2<A, B>(val first: A, val second: B): K2<Tuple2.T, A, B> {
   companion object {
     /** Downcasts a higher-kinded value to [Tuple2]. */
     fun <A, B> narrow(v: K1<K1<T, A>, B>) = v as Tuple2<A, B>
+
+    // Bitraversable
+    /** Turns a tuple of effects into an effect of a tuple. */
+    fun <G, A, B> bisequence(applicative: Applicative<G>, v: K2<T, K1<G, A>, K1<G, B>>): K1<G, K2<T, A, B>> = bitraversable.bisequence(applicative, v)
+    private val bitraversable = object: Tuple2Bitraversable {}
 
     // Monad
     /** Wraps [v] with the empty monoid value as first component. */
@@ -86,6 +92,11 @@ data class Tuple2<A, B>(val first: A, val second: B): K2<Tuple2.T, A, B> {
   /** Maps both components into the monoid [M] and combines them. */
   fun <M: Monoid<*, M>> bifoldMap(type: Class<M>, f: (A) -> M, g: (B) -> M): M = bifoldable.bifoldMap(type, f, g, this)
   private val bifoldable = object: Tuple2Bifoldable {}
+
+  // Bitraversable
+  /** Applies the effectful [f] to [first] and [g] to [second], in that order, and collects the result inside [G]. */
+  fun <G, C, D> bitraverse(applicative: Applicative<G>, f: (A) -> K1<G, C>, g: (B) -> K1<G, D>): K1<G, K2<T, C, D>> = bitraversable.bitraverse(applicative, f, g, this)
+  private val bitraversable = object: Tuple2Bitraversable {}
 
   /** Converts to a Kotlin [Pair]. */
   fun toPair(): Pair<A, B> = Pair(first, second)
