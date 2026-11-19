@@ -7,7 +7,7 @@ import com.github.kotlinz.kotlinz.K2
  * The continuation monad: a computation that, given a continuation `(A) -> R`, produces the final result R.
  *
  * Use it for early exit ([callCC]), backtracking-style control flow, or CPS-transforming code. Has
- * instances for Functor, Applicative, ApplicativeOps, Monad and MonadOps. Not stack-safe: deeply nested
+ * instances for Functor, Applicative, ApplicativeOps, Monad, MonadOps and MonadCont. Not stack-safe: deeply nested
  * continuations may overflow the stack.
  *
  * ```kotlin
