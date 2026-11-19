@@ -3,9 +3,11 @@ package com.github.kotlinz.kotlinz.data.statet
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.K3
+import com.github.kotlinz.kotlinz.data.io.IO
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.monad.Monad
+import com.github.kotlinz.kotlinz.type.monad.MonadIO
 import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
 
 /**
@@ -56,6 +58,8 @@ class StateT<F, S, A>(val monad: Monad<F>, val run: (S) -> K1<F, Pair<A, S>>) : 
         // Transformer
         /** Lifts an inner monadic value into StateT, leaving the state unchanged. */
         fun <F, S, A> lift(monad: Monad<F>, v: K1<F, A>): StateT<F, S, A> = instance<F, S>(monad).lift(v)
+        /** Lifts an [IO] computation through the base monad's MonadIO instance. */
+        fun <F, S, A> liftIO(monad: MonadIO<F>, v: IO<A>): StateT<F, S, A> = object: StateTMonadIO<F, S> { override val monad = monad }.liftIO(v)
 
         private fun <F, S> instance(monad: Monad<F>) = object: StateTMonadState<F, S>, StateTMonadTrans<F, S> { override val monad = monad }
     }
