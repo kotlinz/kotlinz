@@ -13,7 +13,7 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * Use it when you need a list as a `K1` to pass to generic type-class code, or want list-monad
  * style "all combinations" composition via `bind`.
  *
- * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, MonadZip, Foldable, Traversable.
+ * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, MonadZip, Foldable, Traversable, Filterable, Witherable.
  *
  * ```kotlin
  * val pairs = listKOf(1, 2) bind { a -> listKOf("x", "y") fmap { b -> a to b } }
@@ -80,6 +80,11 @@ data class ListK<A>(val value: List<A>): K1<ListK.T, A> {
     /** Turns a list of `G` effects into a `G` effect of a list. */
     fun <G, A> sequence(applicative: Applicative<G>, v: K1<T, K1<G, A>>): K1<G, K1<T, A>> = traversable.sequence(applicative, v)
     private val traversable = object: ListKTraversable {}
+
+    // Filterable
+    /** Keeps the values of the [Maybe.Just] elements and drops the [Maybe.None] ones. */
+    fun <A> catMaybes(v: K1<T, Maybe<A>>): ListK<A> = filterable.catMaybes(v)
+    private val filterable = object: ListKFilterable {}
   }
 
   // Monad
@@ -104,6 +109,19 @@ data class ListK<A>(val value: List<A>): K1<ListK.T, A> {
   /** Applies an effectful [f] to each element and collects the results inside [applicative]. */
   fun <G, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable.traverse(applicative, f, this)
   private val traversable = object: ListKTraversable {}
+
+  // Filterable / Witherable
+  /** Maps every element with [f], keeping only the [Maybe.Just] results. */
+  infix fun <B> mapFilter(f: (A) -> Maybe<B>): ListK<B> = witherable.mapFilter(f, this)
+  /** Keeps only the elements satisfying [p]. */
+  infix fun filter(p: (A) -> Boolean): ListK<A> = witherable.filter(p, this)
+  /** Maps every element with the partial function [f], dropping the elements it maps to `null`. */
+  infix fun <B: Any> collect(f: (A) -> B?): ListK<B> = witherable.collect(f, this)
+  /** Runs the effectful [f] on every element, keeping the [Maybe.Just] results inside the effect. */
+  fun <G, B> wither(applicative: Applicative<G>, f: (A) -> K1<G, Maybe<B>>): K1<G, K1<T, B>> = witherable.wither(applicative, f, this)
+  /** Keeps only the elements for which the effectful predicate [p] yields true. */
+  fun <G> filterA(applicative: Applicative<G>, p: (A) -> K1<G, Boolean>): K1<G, K1<T, A>> = witherable.filterA(applicative, p, this)
+  private val witherable = object: ListKWitherable {}
 
   // MonadPlus
   /** Concatenates this list with [m]. */
