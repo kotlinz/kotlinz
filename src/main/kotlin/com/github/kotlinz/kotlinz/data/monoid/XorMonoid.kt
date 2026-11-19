@@ -1,5 +1,6 @@
 package com.github.kotlinz.kotlinz.data.monoid
 
+import com.github.kotlinz.kotlinz.type.group.CommutativeMonoid
 import com.github.kotlinz.kotlinz.type.group.Group
 
 /**
@@ -9,7 +10,7 @@ import com.github.kotlinz.kotlinz.type.group.Group
  * Monoid.op(XorMonoid::class.java, true.toXorMonoid(), true.toXorMonoid()) // XorMonoid(false)
  * ```
  */
-data class XorMonoid(val value: Boolean) : Group<Boolean, XorMonoid> {
+data class XorMonoid(val value: Boolean) : Group<Boolean, XorMonoid>, CommutativeMonoid<Boolean, XorMonoid> {
     /** Creates the identity element; required by reflective lookups such as `Monoid.mzero(type)`. */
     constructor(): this(false)
 

@@ -1,5 +1,6 @@
 package com.github.kotlinz.kotlinz.data.monoid
 
+import com.github.kotlinz.kotlinz.type.group.CommutativeMonoid
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
 /**
@@ -9,7 +10,7 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * Monoid.op(LongProductMonoid::class.java, 2L.toProductMonoid(), 3L.toProductMonoid()) // LongProductMonoid(6)
  * ```
  */
-data class LongProductMonoid(val value: Long) : Monoid<Long, LongProductMonoid> {
+data class LongProductMonoid(val value: Long) : Monoid<Long, LongProductMonoid>, CommutativeMonoid<Long, LongProductMonoid> {
     /** Creates the identity element; required by reflective lookups such as `Monoid.mzero(type)`. */
     constructor(): this(1L)
 
