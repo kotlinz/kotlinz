@@ -5,7 +5,9 @@ import com.github.kotlinz.kotlinz.data.ior.Ior
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fxReplay
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
+import com.github.kotlinz.kotlinz.type.applicative.Apply
 import com.github.kotlinz.kotlinz.type.group.Monoid
+import com.github.kotlinz.kotlinz.type.group.Semigroup
 
 /**
  * A list that is guaranteed to contain at least one element.
@@ -87,6 +89,18 @@ data class NonEmptyList<A>(val head: A, val tail: List<A>): K1<NonEmptyList.T, A
   /** Maps every element to an effect and collects the results inside the effect. */
   fun <G, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable.traverse(applicative, f, this)
   private val traversable = object: NonEmptyListTraversable {}
+
+  // Foldable1
+  /** Reduces all elements left to right without an initial value. */
+  fun reduceLeft(f: (A, A) -> A): A = foldable1.reduceLeft(f, this)
+  /** Maps every element into the Semigroup [type] and combines the results. */
+  fun <S: Semigroup<*, S>> reduceMap(type: Class<S>, f: (A) -> S): S = foldable1.reduceMap(type, f, this)
+  private val foldable1 = object: NonEmptyListFoldable1 {}
+
+  // Traversable1
+  /** Like [traverse], but only needs an [Apply] because the list is never empty. */
+  fun <G, B> traverse1(apply: Apply<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable1.traverse1(apply, f, this)
+  private val traversable1 = object: NonEmptyListTraversable1 {}
 
   // Comonad
   /** Returns the [head]. */
