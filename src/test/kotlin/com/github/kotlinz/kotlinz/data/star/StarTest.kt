@@ -4,9 +4,15 @@ import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.data.maybe.Maybe
 import com.github.kotlinz.kotlinz.data.maybe.MaybeApplicative
+import com.github.kotlinz.kotlinz.data.identity.Identity
+import com.github.kotlinz.kotlinz.data.identity.IdentityDistributive
+import com.github.kotlinz.kotlinz.data.listk.ListKTraversable
+import com.github.kotlinz.kotlinz.data.listk.listKOf
 import com.github.kotlinz.kotlinz.law.ChoiceLaw
+import com.github.kotlinz.kotlinz.law.ClosedLaw
 import com.github.kotlinz.kotlinz.law.ProfunctorLaw
 import com.github.kotlinz.kotlinz.law.StrongLaw
+import com.github.kotlinz.kotlinz.law.TraversingLaw
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 
@@ -46,6 +52,33 @@ class StarTest : DescribeSpec({
       it("should lift the skipped branch with pure") {
         Star.narrow(choice.left<Int, Int, String>(half))(Either.Right("x")) shouldBe Maybe.Just(Either.Right<Int, String>("x"))
         Star.narrow(choice.left<Int, Int, String>(half))(Either.Left(3)) shouldBe Maybe.None()
+      }
+    }
+
+    context("as Traversing") {
+      val traversing = object : StarTraversing<Maybe.T> { override val applicative = maybe }
+
+      it("should satisfy laws") { TraversingLaw(traversing, ::observe).assertSatisfyingTraversingLaw(half) }
+
+      it("should traverse every focus in the applicative") {
+        val list = object : ListKTraversable {}
+        Star.narrow(traversing.traverse(list, half))(listKOf(2, 4)) shouldBe Maybe.Just(listKOf(1, 2))
+        Star.narrow(traversing.traverse(list, half))(listKOf(2, 3)) shouldBe Maybe.None()
+      }
+    }
+
+    context("as Closed") {
+      val closed = object : StarClosed<Identity.T> { override val distributive = object : IdentityDistributive {} }
+      val inc = Star { n: Int -> Identity(n + 1) }
+      val asFunction = { out: Any? -> (out as Identity<*>).value as (Any?) -> Any? }
+
+      @Suppress("UNCHECKED_CAST")
+      val observeIdentity = { v: K3<Star.T, Identity.T, *, *> -> (v as Star<Identity.T, Any?, Any?>).run }
+
+      it("should satisfy laws") { ClosedLaw(closed, observeIdentity, asFunction).assertSatisfyingClosedLaw(inc) }
+
+      it("should post-compose through the distributive functor") {
+        Identity.narrow(closed.closed<Int, Int, String>(inc)({ s: String -> s.length })).value("abc") shouldBe 4
       }
     }
   }

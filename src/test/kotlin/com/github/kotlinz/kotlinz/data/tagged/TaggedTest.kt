@@ -3,6 +3,8 @@ package com.github.kotlinz.kotlinz.data.tagged
 import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.law.ChoiceLaw
+import com.github.kotlinz.kotlinz.law.ClosedLaw
+import com.github.kotlinz.kotlinz.law.CostrongLaw
 import com.github.kotlinz.kotlinz.law.ProfunctorLaw
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
@@ -34,6 +36,29 @@ class TaggedTest : DescribeSpec({
       it("should inject the value into the selected branch") {
         choice.left<Int, Int, String>(tagged).value shouldBe Either.Left<Int, String>(7)
         choice.right<Int, Int, String>(tagged).value shouldBe Either.Right<String, Int>(7)
+      }
+    }
+
+    context("as Closed") {
+      val closed = object : TaggedClosed {}
+
+      @Suppress("UNCHECKED_CAST")
+      val asFunction = { out: Any? -> out as (Any?) -> Any? }
+
+      it("should satisfy laws") { ClosedLaw(closed, ::observe, asFunction).assertSatisfyingClosedLaw(tagged) }
+      it("should carry a constant function") { closed.closed<Int, Int, String>(tagged).value("any") shouldBe 7 }
+    }
+
+    context("as Costrong") {
+      val costrong = object : TaggedCostrong {}
+      val v = Tagged<Pair<Int, Int>, Pair<Int, Int>>(Pair(1, 2))
+      val w = Tagged<Pair<Pair<Int, Int>, Int>, Pair<Pair<Int, Int>, Int>>(Pair(Pair(1, 2), 3))
+
+      it("should satisfy laws") { CostrongLaw(costrong, ::observe).assertSatisfyingCostrongLaw(v, w) }
+
+      it("should keep the wanted component") {
+        costrong.unfirst(v).value shouldBe 1
+        costrong.unsecond(v).value shouldBe 2
       }
     }
   }

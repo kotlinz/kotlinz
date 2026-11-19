@@ -9,6 +9,8 @@ import com.github.kotlinz.kotlinz.data.state.State
 import com.github.kotlinz.kotlinz.data.state.StateMonad
 import com.github.kotlinz.kotlinz.law.ApplicativeLaw
 import com.github.kotlinz.kotlinz.law.FunctorLaw
+import com.github.kotlinz.kotlinz.law.MFunctorLaw
+import com.github.kotlinz.kotlinz.law.MonadTransLaw
 import com.github.kotlinz.kotlinz.law.ObservedMonadLaw
 import com.github.kotlinz.kotlinz.type.Functor
 import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
@@ -64,6 +66,40 @@ class FreeTTest : DescribeSpec({
             val u = say("u") fmap { { x: Int -> x * 3 } }
             val v = log("v", { x: Int -> x + 2 })
             it("should satisfy laws") { law.assertSatisfyingApplicativeLaw(m, 2, u, v) { it - 1 } }
+        }
+
+        context("as MonadTrans") {
+            val trans = FreeTMonadTrans.of(SayFunctor, state)
+            val m0 = State<List<String>, Int> { s -> Pair(s.size, s + "m") }
+            val k = { x: Int -> State<List<String>, Int> { s -> Pair(x * 10, s + "k$x") } }
+            it("should satisfy laws") { MonadTransLaw(state, trans) { runLog(it) }.assertSatisfyingMonadTransLaw(1, m0, k) }
+        }
+
+        context("as MFunctor") {
+            val identity = object : IdentityMonad {}
+            val maybe = object : MaybeMonad {}
+            val toMaybe = object : NaturalTransformation<Identity.T, Maybe.T> {
+                override fun <A> invoke(fa: K1<Identity.T, A>): Maybe<A> = Maybe.Just(Identity.narrow(fa).value)
+            }
+            val maybeId = object : NaturalTransformation<Maybe.T, Maybe.T> {
+                override fun <A> invoke(fa: K1<Maybe.T, A>): Maybe<A> = Maybe.narrow(fa)
+            }
+            val program = FreeT.liftF(SayFunctor, identity, Say("x", 1)) bind { FreeT.lift(SayFunctor, identity, Identity(it + 1)) }
+            val runMaybe = { v: K1<*, *> -> (v as FreeT<Say.T, Maybe.T, Int>).iterT { layer -> Say.narrow(layer).next } }
+            val runIdentity = { v: K1<*, *> -> (v as FreeT<Say.T, Identity.T, Int>).iterT { layer -> Say.narrow(layer).next } }
+
+            it("should satisfy identity") {
+                MFunctorLaw.identity(object : FreeTMFunctor<Say.T, Identity.T, Identity.T> { override val target = identity }, program, runIdentity)
+            }
+
+            it("should satisfy composition") {
+                MFunctorLaw.composition(
+                    object : FreeTMFunctor<Say.T, Identity.T, Maybe.T> { override val target = maybe },
+                    object : FreeTMFunctor<Say.T, Maybe.T, Maybe.T> { override val target = maybe },
+                    object : FreeTMFunctor<Say.T, Identity.T, Maybe.T> { override val target = maybe },
+                    toMaybe, maybeId, program, runMaybe
+                )
+            }
         }
 
         context("with primitives") {
