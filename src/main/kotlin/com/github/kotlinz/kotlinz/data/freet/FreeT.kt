@@ -15,7 +15,8 @@ import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
  *
  * Use it when a DSL's interpretation needs another effect at every step, or when instructions and
  * inner effects should be mixed in one program. Unlike `Free`, `F` must be a [Functor].
- * Instances: [FreeTFunctor], [FreeTApplicative], [FreeTMonad] (all given `Functor<F>` and `Monad<M>`).
+ * Instances: [FreeTFunctor], [FreeTApplicative], [FreeTMonad], [FreeTMonadTrans] (all given `Functor<F>` and
+ * `Monad<M>`) and [FreeTMFunctor].
  * Deep programs are not stack-safe; that depends on the inner monad.
  *
  * ```kotlin
@@ -48,11 +49,10 @@ class FreeT<F, M, A>(val functor: Functor<F>, val monad: Monad<M>, val run: K1<M
         /** Lifts a single instruction into a program. */
         fun <F, M, A> liftF(functor: Functor<F>, monad: Monad<M>, fa: K1<F, A>): FreeT<F, M, A> =
             FreeT(functor, monad, monad.pure(FreeF.Free(functor.fmap({ a: A -> pure(functor, monad, a) }, fa))))
-        /** Lifts an inner monadic value into a program (`MonadTrans.lift`). */
-        fun <F, M, A> lift(functor: Functor<F>, monad: Monad<M>, v: K1<M, A>): FreeT<F, M, A> =
-            FreeT(functor, monad, monad.fmap({ a: A -> FreeF.Pure(a) }, v))
+        /** Lifts an inner monadic value into a program. */
+        fun <F, M, A> lift(functor: Functor<F>, monad: Monad<M>, v: K1<M, A>): FreeT<F, M, A> = instance(functor, monad).lift(v)
 
-        private fun <F, M> instance(functor: Functor<F>, monad: Monad<M>) = FreeTMonad.of(functor, monad)
+        private fun <F, M> instance(functor: Functor<F>, monad: Monad<M>) = FreeTMonadTrans.of(functor, monad)
     }
 
     // Monad
@@ -75,10 +75,8 @@ class FreeT<F, M, A>(val functor: Functor<F>, val monad: Monad<M>, val run: K1<M
     fun foldMap(nt: NaturalTransformation<F, M>): K1<M, A> = iterT { layer -> monad.join(nt(layer)) }
 
     /** Changes the inner monad with [nt]. */
-    fun <N> hoistFreeT(monadN: Monad<N>, nt: NaturalTransformation<M, N>): FreeT<F, N, A> {
-        val mapped = monad.fmap({ step: FreeF<F, A, FreeT<F, M, A>> -> step.mapNext(functor) { it.hoistFreeT(monadN, nt) } }, run)
-        return FreeT(functor, monadN, nt(mapped))
-    }
+    fun <N> hoistFreeT(monadN: Monad<N>, nt: NaturalTransformation<M, N>): FreeT<F, N, A> =
+        object : FreeTMFunctor<F, M, N> { override val target = monadN }.hoist(nt, this)
 
     /** Changes the instruction functor with [nt]. */
     fun <G> transFreeT(functorG: Functor<G>, nt: NaturalTransformation<F, G>): FreeT<G, M, A> {
