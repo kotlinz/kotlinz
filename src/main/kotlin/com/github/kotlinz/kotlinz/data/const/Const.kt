@@ -1,6 +1,7 @@
 package com.github.kotlinz.kotlinz.data.const
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
@@ -39,6 +40,11 @@ data class Const<A, B>(val value: A): K2<Const.T, A, B> {
     /** Lifts a ternary function; the held values are combined with the monoid. */
     fun <S: Monoid<*, S>, A, B, C, D> liftA3(type: Class<S>, f: (A, B, C) -> D) = applicativeOps(type).liftA3(f)
     private fun <S: Monoid<*, S>> applicativeOps(type: Class<S>) = object: ConstApplicativeOps<S> { override val type = type }
+
+    // Selective
+    /** Combines the held values of [fab] and [fn] with the monoid, recording every possible effect. */
+    fun <S: Monoid<*, S>, A, B> select(type: Class<S>, fab: K1<K1<T, S>, Either<A, B>>, fn: K1<K1<T, S>, (A) -> B>): Const<S, B> =
+      object: ConstSelective<S> { override val type = type }.select(fab, fn)
   }
 
   // Functor
