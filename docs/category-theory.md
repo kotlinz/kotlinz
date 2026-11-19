@@ -317,7 +317,7 @@ check(runPure(freerProgram, emptyMap()) == 42)
 
 `FreeSelective<F, A>` sits between `FreeAp` (no branching) and `Free` (arbitrary, opaque branching): a program is a
 chain of instructions where each may be skipped depending on earlier results, built with the `Selective`
-combinators (`select`, `branch`, `ifS`, `whenS`; see [Type classes](type-classes/README.md)). Every *possible*
+combinators (`select`, `branch`, `ifS`, `whenS`; see [Selective](type-classes/selective.md)). Every *possible*
 instruction is still known up front, so `effects()` lists all instructions that may run and `necessaryEffects()`
 those that always run. `foldMap` interprets it into any `Selective` (for a monad, mix in `MonadSelective`) and runs
 only the instructions on the branch taken.
