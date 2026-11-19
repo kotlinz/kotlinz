@@ -7,6 +7,7 @@ import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.Monad
+import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
 
 /**
  * Writer monad transformer: a computation in the monad [F] that also accumulates a log [W].
@@ -14,8 +15,8 @@ import com.github.kotlinz.kotlinz.type.monad.Monad
  * [run] is `F<(value, log)>`; [monad] is the underlying monad instance and [type] the Monoid class of
  * the log. Use it to add logging to effectful computations (e.g. over `IO` or `Maybe`).
  *
- * Instances: [WriterTFunctor], [WriterTApplicative], [WriterTMonad], [WriterTMonadWriter]
- * (all require a Monad for `F` and a Monoid log).
+ * Instances: [WriterTFunctor], [WriterTApplicative], [WriterTMonad], [WriterTMonadWriter], [WriterTMonadTrans]
+ * (all require a Monad for `F` and a Monoid log) and [WriterTMFunctor].
  *
  * ```kotlin
  * val identity = object : IdentityMonad {}
@@ -50,11 +51,9 @@ class WriterT<F, W: Monoid<*, W>, A>(val monad: Monad<F>, val type: Class<W>, va
 
         // Transformer
         /** Lifts an `F` computation into [WriterT] with an empty log. */
-        fun <F, W: Monoid<*, W>, A> lift(monad: Monad<F>, type: Class<W>, v: K1<F, A>): WriterT<F, W, A> {
-            return WriterT(monad, type, monad.fmap({ a -> Pair(a, Monoid.mzero(type)) }, v))
-        }
+        fun <F, W: Monoid<*, W>, A> lift(monad: Monad<F>, type: Class<W>, v: K1<F, A>): WriterT<F, W, A> = instance(monad, type).lift(v)
 
-        private fun <F, W: Monoid<*, W>> instance(monad: Monad<F>, type: Class<W>) = object: WriterTMonadWriter<F, W> {
+        private fun <F, W: Monoid<*, W>> instance(monad: Monad<F>, type: Class<W>) = object: WriterTMonadWriter<F, W>, WriterTMonadTrans<F, W> {
             override val monad = monad
             override val type = type
         }
@@ -74,5 +73,20 @@ class WriterT<F, W: Monoid<*, W>, A>(val monad: Monad<F>, val type: Class<W>, va
     /** Transforms the log with [f]. */
     infix fun censor(f: (W) -> W): WriterT<F, W, A> = narrow(instance().censor(f, this))
 
+    // MFunctor
+    /** Swaps the base monad using [nt]; [target] is the monad of the new base. */
+    fun <G> hoist(target: Monad<G>, nt: NaturalTransformation<F, G>): WriterT<G, W, A> {
+        val type = this.type
+        return object: WriterTMFunctor<F, G, W> {
+            override val target = target
+            override val type = type
+        }.hoist(nt, this)
+    }
+
     private fun instance() = instance(monad, type)
+
+    /** Two transformers are equal when their underlying `F<(value, log)>` values are equal. */
+    override fun equals(other: Any?): Boolean = other is WriterT<*, *, *> && run == other.run
+    override fun hashCode(): Int = run.hashCode()
+    override fun toString(): String = "WriterT(run=$run)"
 }

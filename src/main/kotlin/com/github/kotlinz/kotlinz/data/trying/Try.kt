@@ -25,9 +25,9 @@ sealed class Try<A>: K1<Try.T, A> {
   class T
 
   /** A successful result holding [value]. */
-  class Success<A>(val value: A): Try<A>()
+  data class Success<A>(val value: A): Try<A>()
   /** A failed result holding the thrown [error]. */
-  class Failure<A>(val error: Throwable): Try<A>()
+  data class Failure<A>(val error: Throwable): Try<A>()
 
   companion object {
     /** Downcasts a higher-kinded value to its concrete type. */
@@ -117,14 +117,6 @@ sealed class Try<A>: K1<Try.T, A> {
     return when (this) {
       is Success -> this.value
       is Failure -> v
-    }
-  }
-
-  override fun equals(other: Any?): Boolean {
-    return when {
-      this is Success && other is Try.Success<*> -> this.value == other.value
-      this is Failure && other is Try.Failure<*> -> this.error == other.error
-      else -> false
     }
   }
 }

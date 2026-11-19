@@ -6,12 +6,14 @@ import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.monad.Monad
+import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
 
 /**
  * Reader monad transformer: a function `(R) -> F<A>` for an underlying monad `F`.
  *
  * Use it to add a read-only environment to another effect such as IO or Maybe.
- * Has instances for Functor, Applicative, Monad and MonadReader, all derived from the given [monad].
+ * Has instances for Functor, Applicative, Monad, MonadReader and MonadTrans, all derived from the given [monad],
+ * plus MFunctor.
  *
  * ```kotlin
  * val identity = object : IdentityMonad {}
@@ -43,9 +45,9 @@ class ReaderT<F, R, A>(val monad: Monad<F>, val run: (R) -> K1<F, A>) : K3<Reade
 
         // Transformer
         /** Lifts an action of the underlying monad, ignoring the environment. */
-        fun <F, R, A> lift(monad: Monad<F>, v: K1<F, A>): ReaderT<F, R, A> = ReaderT(monad) { _ -> v }
+        fun <F, R, A> lift(monad: Monad<F>, v: K1<F, A>): ReaderT<F, R, A> = instance<F, R>(monad).lift(v)
 
-        private fun <F, R> instance(monad: Monad<F>) = object: ReaderTMonadReader<F, R> { override val monad = monad }
+        private fun <F, R> instance(monad: Monad<F>) = object: ReaderTMonadReader<F, R>, ReaderTMonadTrans<F, R> { override val monad = monad }
     }
 
     // Monad
@@ -59,6 +61,12 @@ class ReaderT<F, R, A>(val monad: Monad<F>, val run: (R) -> K1<F, A>) : K3<Reade
     // MonadReader
     /** Runs this computation with an environment modified by [f]. */
     fun local(f: (R) -> R): ReaderT<F, R, A> = instance().local(f, this)
+
+    // MFunctor
+    /** Swaps the base monad using [nt]; [target] is the monad of the new base. */
+    fun <G> hoist(target: Monad<G>, nt: NaturalTransformation<F, G>): ReaderT<G, R, A> {
+        return object: ReaderTMFunctor<F, G, R> { override val target = target }.hoist(nt, this)
+    }
 
     private fun instance() = object: ReaderTMonadReader<F, R> { override val monad = this@ReaderT.monad }
 }

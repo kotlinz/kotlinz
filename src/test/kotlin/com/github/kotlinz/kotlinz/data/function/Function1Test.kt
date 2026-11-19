@@ -1,8 +1,12 @@
 package com.github.kotlinz.kotlinz.data.function
 
+import com.github.kotlinz.kotlinz.K3
+import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.law.ApplicativeLaw
+import com.github.kotlinz.kotlinz.law.ChoiceLaw
 import com.github.kotlinz.kotlinz.law.FunctorLaw
 import com.github.kotlinz.kotlinz.law.ProfunctorLaw
+import com.github.kotlinz.kotlinz.law.StrongLaw
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 
@@ -86,5 +90,26 @@ class Function1Test : DescribeSpec({
                 m.second<String>()(Pair("x", 1)) shouldBe Pair("x", 4)
             }
         }
+
+        context("as Strong") {
+            val strong = object : Function1Strong {}
+
+            it("should satisfy laws") { StrongLaw(strong, ::observeFunction1).assertSatisfyingStrongLaw(m) }
+            it("should apply to one component") { strong.second<Int, Int, String>(m)(Pair("x", 1)) shouldBe Pair("x", 4) }
+        }
+
+        context("as Choice") {
+            val choice = object : Function1Choice {}
+
+            it("should satisfy laws") { ChoiceLaw(choice, ::observeFunction1).assertSatisfyingChoiceLaw(m) }
+
+            it("should apply to one branch") {
+                choice.left<Int, Int, String>(m)(Either.Left(1)) shouldBe Either.Left<Int, String>(4)
+                choice.right<Int, Int, String>(m)(Either.Left("x")) shouldBe Either.Left<String, Int>("x")
+            }
+        }
     }
 })
+
+@Suppress("UNCHECKED_CAST")
+private fun observeFunction1(v: K3<Function1.T, Unit, *, *>): (Any?) -> Any? = (v as Function1<Any?, Any?>).run
