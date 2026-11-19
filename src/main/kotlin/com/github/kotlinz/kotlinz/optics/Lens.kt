@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.data.forget.Forget
 import com.github.kotlinz.kotlinz.data.forget.ForgetStrong
 import com.github.kotlinz.kotlinz.data.function.Function1
 import com.github.kotlinz.kotlinz.data.function.Function1Strong
+import com.github.kotlinz.kotlinz.data.monoidof.MonoidOf
 import com.github.kotlinz.kotlinz.type.profunctor.Choice
 import com.github.kotlinz.kotlinz.type.profunctor.Strong
 
@@ -13,6 +14,7 @@ import com.github.kotlinz.kotlinz.type.profunctor.Strong
  *
  * Profunctor encoding: a `Lens` lifts any [Strong] profunctor value `P<A, B>` to `P<S, T>` via the
  * generic method [runStrong]. Use the [Lens] factory and the [get] / [set] / [modify] helpers.
+ * Every `Lens` is an [Optional] and a [Getter].
  *
  * Laws:
  * - Get-set: `get(set(b)(s)) == b`
@@ -27,9 +29,14 @@ import com.github.kotlinz.kotlinz.type.profunctor.Strong
  * age.modify { it + 1 }(Person("Ann", 30))   // Person(Ann, 31)
  * ```
  */
-interface Lens<S, T, A, B> : Optional<S, T, A, B> {
+interface Lens<S, T, A, B> : Optional<S, T, A, B>, Getter<S, A> {
   /** Lifts [pab] through this lens using [strong]. */
   fun <P, F> runStrong(strong: Strong<P, F>, pab: K3<P, F, A, B>): K3<P, F, S, T>
+
+  override fun <R> runGetter(pab: Forget<R, A, A>): Forget<R, S, S> =
+    Forget.narrow(runStrong(object : ForgetStrong<R> {}, pab.retag<B>())).retag()
+
+  override fun <R> runFold(monoid: MonoidOf<R>, pab: Forget<R, A, A>): Forget<R, S, S> = runGetter(pab)
 
   override fun <P, F, Q> runOptional(profunctor: Q, pab: K3<P, F, A, B>): K3<P, F, S, T> where Q : Strong<P, F>, Q : Choice<P, F> =
     runStrong(profunctor, pab)
