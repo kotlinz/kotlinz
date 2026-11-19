@@ -10,7 +10,8 @@ import com.github.kotlinz.kotlinz.K3
  * Running an optic on a `Forget` extracts the focus: it is the profunctor behind `get`, `getMaybe`
  * and folds.
  *
- * Instances: [ForgetProfunctor], [ForgetStrong], [ForgetChoice] (needs a monoid on [R]).
+ * Instances: [ForgetProfunctor], [ForgetStrong], [ForgetCochoice], [ForgetChoice] and [ForgetTraversing]
+ * (need a monoid on [R]).
  *
  * ```kotlin
  * val length = Forget<Int, String, Nothing> { s -> s.length }

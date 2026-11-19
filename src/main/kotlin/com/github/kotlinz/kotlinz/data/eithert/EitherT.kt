@@ -4,9 +4,11 @@ import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.data.either.Either
+import com.github.kotlinz.kotlinz.data.io.IO
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.monad.Monad
+import com.github.kotlinz.kotlinz.type.monad.MonadIO
 import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
 
 /**
@@ -51,6 +53,8 @@ class EitherT<F, E, A>(val monad: Monad<F>, val run: K1<F, Either<E, A>>) : K3<E
         // Transformer
         /** Lifts an effect [v] into [EitherT] as a success. */
         fun <F, E, A> lift(monad: Monad<F>, v: K1<F, A>): EitherT<F, E, A> = instance<F, E>(monad).lift(v)
+        /** Lifts an [IO] computation through the base monad's MonadIO instance. */
+        fun <F, E, A> liftIO(monad: MonadIO<F>, v: IO<A>): EitherT<F, E, A> = object: EitherTMonadIO<F, E> { override val monad = monad }.liftIO(v)
         /** Lifts a pure [Either] into [EitherT]. */
         fun <F, E, A> fromEither(monad: Monad<F>, v: Either<E, A>): EitherT<F, E, A> = EitherT(monad, monad.pure(v))
 

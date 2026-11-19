@@ -7,7 +7,7 @@ import com.github.kotlinz.kotlinz.K3
 /**
  * A function out of a functor, `(F<A>) -> B`, viewed as a profunctor (the "Costar" of [F]).
  *
- * Instances: [CostarProfunctor] (needs `Functor<F>`).
+ * Instances: [CostarProfunctor] and [CostarClosed] (need `Functor<F>`).
  *
  * ```kotlin
  * val sum = Costar { xs: K1<ListK.T, Int> -> ListK.narrow(xs).value.sum() }

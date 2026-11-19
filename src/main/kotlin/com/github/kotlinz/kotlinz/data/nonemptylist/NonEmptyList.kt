@@ -1,6 +1,7 @@
 package com.github.kotlinz.kotlinz.data.nonemptylist
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.data.ior.Ior
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fxReplay
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
@@ -11,7 +12,7 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  *
  * Use it when emptiness is not a valid state, e.g. a collection of validation errors
  * or a non-empty set of choices, so that [head] and [extract] are always safe.
- * Has instances for Functor, Applicative, Monad, Foldable, Traversable, Copointed and Comonad.
+ * Has instances for Functor, Applicative, Monad, Foldable, Traversable, Copointed, Comonad, Semialign and Zip.
  *
  * ```kotlin
  * val xs = nonEmptyListOf(1, 2, 3)
@@ -95,6 +96,17 @@ data class NonEmptyList<A>(val head: A, val tail: List<A>): K1<NonEmptyList.T, A
   /** Applies [f] to every non-empty suffix. */
   fun <B> extend(f: (K1<T, A>) -> B): NonEmptyList<B> = comonad.extend(f, this)
   private val comonad = object: NonEmptyListComonad {}
+
+  // Semialign / Zip
+  /** Pairs this list with [m] by index, keeping the leftover elements of the longer one. */
+  infix fun <B> align(m: K1<T, B>): NonEmptyList<Ior<A, B>> = zip.align(this, m)
+  /** Combines this list with [m] by index using [f], keeping the leftover elements of the longer one. */
+  fun <B, C> alignWith(m: K1<T, B>, f: (Ior<A, B>) -> C): NonEmptyList<C> = zip.alignWith(f, this, m)
+  /** Pairs this list with [m] by index, truncating to the shorter one. */
+  infix fun <B> zip(m: K1<T, B>): NonEmptyList<Pair<A, B>> = zip.zip(this, m)
+  /** Combines this list with [m] by index using [f], truncating to the shorter one. */
+  fun <B, C> zipWith(m: K1<T, B>, f: (A, B) -> C): NonEmptyList<C> = zip.zipWith(f, this, m)
+  private val zip = object: NonEmptyListZip {}
 
   /** Converts to a plain [List]. */
   fun toList(): List<A> = listOf(head) + tail

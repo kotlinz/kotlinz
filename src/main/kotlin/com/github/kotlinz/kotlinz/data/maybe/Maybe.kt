@@ -1,6 +1,7 @@
 package com.github.kotlinz.kotlinz.data.maybe
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.data.ior.Ior
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.applicative.Applicative
@@ -13,6 +14,8 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * compose such computations with `fmap`/`bind`, combine alternatives with `orElse`, or traverse them.
  *
  * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, Foldable, Traversable, Filterable, Witherable.
+
+ * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, Foldable, Traversable, Semialign, Align, Zip.
  *
  * ```kotlin
  * val half = { n: Int -> if (n % 2 == 0) Maybe.Just(n / 2) else Maybe.None<Int>() }
@@ -85,6 +88,11 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
     /** Flattens a `Maybe<Maybe<A>>`, treating an inner [None] as dropped. */
     fun <A> catMaybes(v: K1<T, Maybe<A>>): Maybe<A> = filterable.catMaybes(v)
     private val filterable = object: MaybeFilterable {}
+
+    // Align
+    /** Returns [None], the identity of [align]. */
+    fun <A> nil(): Maybe<A> = align.nil()
+    private val align = object: MaybeAlign {}
   }
 
   // Monad
@@ -122,6 +130,17 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
   /** Keeps the value only when the effectful predicate [p] yields true. */
   fun <G> filterA(applicative: Applicative<G>, p: (A) -> K1<G, Boolean>): K1<G, K1<T, A>> = witherable.filterA(applicative, p, this)
   private val witherable = object: MaybeWitherable {}
+
+  // Semialign / Zip
+  /** Pairs this with [m], keeping whichever values are present. */
+  infix fun <B> align(m: K1<T, B>): Maybe<Ior<A, B>> = zip.align(this, m)
+  /** Combines this with [m] using [f] on whichever values are present. */
+  fun <B, C> alignWith(m: K1<T, B>, f: (Ior<A, B>) -> C): Maybe<C> = zip.alignWith(f, this, m)
+  /** Pairs this with [m] when both values are present. */
+  infix fun <B> zip(m: K1<T, B>): Maybe<Pair<A, B>> = zip.zip(this, m)
+  /** Combines this with [m] using [f] when both values are present. */
+  fun <B, C> zipWith(m: K1<T, B>, f: (A, B) -> C): Maybe<C> = zip.zipWith(f, this, m)
+  private val zip = object: MaybeZip {}
 
   /** Returns the contained value, or [v] when [None]. */
   fun getOrElse(v: A): A {

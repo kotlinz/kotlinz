@@ -3,9 +3,14 @@ package com.github.kotlinz.kotlinz.data.forget
 import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.data.monoidof.MonoidOf
+import com.github.kotlinz.kotlinz.data.listk.ListKTraversable
+import com.github.kotlinz.kotlinz.data.listk.listKOf
 import com.github.kotlinz.kotlinz.law.ChoiceLaw
+import com.github.kotlinz.kotlinz.law.CochoiceLaw
 import com.github.kotlinz.kotlinz.law.ProfunctorLaw
 import com.github.kotlinz.kotlinz.law.StrongLaw
+import com.github.kotlinz.kotlinz.law.TraversingLaw
+import com.github.kotlinz.kotlinz.law.listWander
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
 
@@ -44,6 +49,40 @@ class ForgetTest : DescribeSpec({
       it("should yield the empty value for the skipped branch") {
         Forget.narrow(choice.left<Int, Int, String>(double))(Either.Left(5)) shouldBe 10
         Forget.narrow(choice.left<Int, Int, String>(double))(Either.Right("x")) shouldBe 0
+      }
+    }
+
+    context("as Traversing") {
+      val traversing = object : ForgetTraversing<Int> { override val monoid = MonoidOf(0) { a: Int, b: Int -> a + b } }
+
+      it("should satisfy laws") { TraversingLaw(traversing, ::observe).assertSatisfyingTraversingLaw(double) }
+
+      it("should combine the results for every focus") {
+        Forget.narrow(traversing.traverse(object : ListKTraversable {}, double))(listKOf(1, 2, 3)) shouldBe 12
+        Forget.narrow(traversing.wander(listWander<Int, Int>(), double))(listOf()) shouldBe 0
+      }
+    }
+
+    context("as Cochoice") {
+      val cochoice = object : ForgetCochoice<Int> {}
+      val v = Forget<Int, Either<Int, Int>, Either<Int, Int>> { e ->
+        when (e) {
+          is Either.Left -> e.value
+          is Either.Right -> e.value * 100
+        }
+      }
+      val w = Forget<Int, Either<Either<Int, Int>, Int>, Either<Either<Int, Int>, Int>> { e ->
+        when (e) {
+          is Either.Left -> when (val inner = e.value) { is Either.Left -> inner.value; is Either.Right -> inner.value * 10 }
+          is Either.Right -> e.value * 100
+        }
+      }
+
+      it("should satisfy laws") { CochoiceLaw(cochoice, ::observe).assertSatisfyingCochoiceLaw(v, w) }
+
+      it("should inject the input into the kept branch") {
+        cochoice.unleft(v)(3) shouldBe 3
+        cochoice.unright(v)(3) shouldBe 300
       }
     }
   }

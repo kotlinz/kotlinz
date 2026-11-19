@@ -10,7 +10,7 @@ import com.github.kotlinz.kotlinz.K3
  * Running an optic on a `Tagged` builds the whole from a focus: it is the profunctor behind
  * `reverseGet`. Encoded as K3 with a phantom `Unit`, like `Function1`.
  *
- * Instances: [TaggedProfunctor], [TaggedChoice].
+ * Instances: [TaggedProfunctor], [TaggedChoice], [TaggedClosed], [TaggedCostrong].
  *
  * ```kotlin
  * val choice = object : TaggedChoice {}
