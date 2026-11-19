@@ -9,7 +9,8 @@ import com.github.kotlinz.kotlinz.K3
  *
  * Running an optic on a `Star` over an `Applicative<F>` yields an effectful traversal (`traverseOf`).
  *
- * Instances: [StarProfunctor] and [StarStrong] (need `Functor<F>`), [StarChoice] (needs `Applicative<F>`).
+ * Instances: [StarProfunctor] and [StarStrong] (need `Functor<F>`), [StarChoice] and [StarTraversing]
+ * (need `Applicative<F>`), [StarClosed] (needs `Distributive<F>`).
  *
  * ```kotlin
  * val half = Star { n: Int -> if (n % 2 == 0) Maybe.Just(n / 2) else Maybe.None() }

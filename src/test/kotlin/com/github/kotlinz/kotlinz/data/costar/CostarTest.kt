@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.data.listk.ListK
 import com.github.kotlinz.kotlinz.data.listk.ListKFunctor
 import com.github.kotlinz.kotlinz.data.listk.listKOf
+import com.github.kotlinz.kotlinz.law.ClosedLaw
 import com.github.kotlinz.kotlinz.law.ProfunctorLaw
 import io.kotest.core.spec.style.DescribeSpec
 import io.kotest.matchers.shouldBe
@@ -24,6 +25,23 @@ class CostarTest : DescribeSpec({
       }
 
       it("should post-compose with rmap") { (sum rmap { n: Int -> "n=$n" })(listKOf(1, 2)) shouldBe "n=3" }
+    }
+
+    context("as Closed") {
+      val closed = object : CostarClosed<ListK.T> { override val functor = object : ListKFunctor {} }
+
+      @Suppress("UNCHECKED_CAST")
+      val observeSingleton = { v: K3<Costar.T, ListK.T, *, *> -> { a: Any? -> (v as Costar<ListK.T, Any?, Any?>)(listKOf(a)) } }
+
+      @Suppress("UNCHECKED_CAST")
+      val asFunction = { out: Any? -> out as (Any?) -> Any? }
+
+      it("should satisfy laws") { ClosedLaw(closed, observeSingleton, asFunction).assertSatisfyingClosedLaw(sum) }
+
+      it("should apply every function to the shared input") {
+        val functions = listKOf({ s: String -> s.length }, { s: String -> s.length * 10 })
+        closed.closed<Int, Int, String>(sum)(functions)("ab") shouldBe 22
+      }
     }
   }
 })
