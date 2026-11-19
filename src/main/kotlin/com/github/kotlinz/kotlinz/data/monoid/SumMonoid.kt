@@ -1,5 +1,6 @@
 package com.github.kotlinz.kotlinz.data.monoid
 
+import com.github.kotlinz.kotlinz.type.group.CommutativeMonoid
 import com.github.kotlinz.kotlinz.type.group.Group
 
 /**
@@ -12,7 +13,7 @@ import com.github.kotlinz.kotlinz.type.group.Group
  * Group.inverse(SumMonoid::class.java, 2.toSumMonoid())            // SumMonoid(-2)
  * ```
  */
-data class SumMonoid(val value: Int) : Group<Int, SumMonoid> {
+data class SumMonoid(val value: Int) : Group<Int, SumMonoid>, CommutativeMonoid<Int, SumMonoid> {
     /** Creates the identity element; required by reflective lookups such as `Monoid.mzero(type)`. */
     constructor(): this(0)
 

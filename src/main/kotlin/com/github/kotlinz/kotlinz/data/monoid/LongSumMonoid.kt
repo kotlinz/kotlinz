@@ -1,5 +1,6 @@
 package com.github.kotlinz.kotlinz.data.monoid
 
+import com.github.kotlinz.kotlinz.type.group.CommutativeMonoid
 import com.github.kotlinz.kotlinz.type.group.Group
 
 /**
@@ -9,7 +10,7 @@ import com.github.kotlinz.kotlinz.type.group.Group
  * Monoid.op(LongSumMonoid::class.java, 2L.toSumMonoid(), 3L.toSumMonoid()) // LongSumMonoid(5)
  * ```
  */
-data class LongSumMonoid(val value: Long) : Group<Long, LongSumMonoid> {
+data class LongSumMonoid(val value: Long) : Group<Long, LongSumMonoid>, CommutativeMonoid<Long, LongSumMonoid> {
     /** Creates the identity element; required by reflective lookups such as `Monoid.mzero(type)`. */
     constructor(): this(0L)
 
