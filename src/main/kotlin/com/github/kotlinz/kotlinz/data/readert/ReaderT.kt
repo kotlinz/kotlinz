@@ -3,9 +3,11 @@ package com.github.kotlinz.kotlinz.data.readert
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.K3
+import com.github.kotlinz.kotlinz.data.io.IO
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.monad.Monad
+import com.github.kotlinz.kotlinz.type.monad.MonadIO
 import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
 
 /**
@@ -46,6 +48,8 @@ class ReaderT<F, R, A>(val monad: Monad<F>, val run: (R) -> K1<F, A>) : K3<Reade
         // Transformer
         /** Lifts an action of the underlying monad, ignoring the environment. */
         fun <F, R, A> lift(monad: Monad<F>, v: K1<F, A>): ReaderT<F, R, A> = instance<F, R>(monad).lift(v)
+        /** Lifts an [IO] computation through the base monad's MonadIO instance. */
+        fun <F, R, A> liftIO(monad: MonadIO<F>, v: IO<A>): ReaderT<F, R, A> = object: ReaderTMonadIO<F, R> { override val monad = monad }.liftIO(v)
 
         private fun <F, R> instance(monad: Monad<F>) = object: ReaderTMonadReader<F, R>, ReaderTMonadTrans<F, R> { override val monad = monad }
     }

@@ -3,10 +3,12 @@ package com.github.kotlinz.kotlinz.data.writert
 import com.github.kotlinz.kotlinz.K1
 import com.github.kotlinz.kotlinz.K2
 import com.github.kotlinz.kotlinz.K3
+import com.github.kotlinz.kotlinz.data.io.IO
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.group.Monoid
 import com.github.kotlinz.kotlinz.type.monad.Monad
+import com.github.kotlinz.kotlinz.type.monad.MonadIO
 import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
 
 /**
@@ -52,6 +54,13 @@ class WriterT<F, W: Monoid<*, W>, A>(val monad: Monad<F>, val type: Class<W>, va
         // Transformer
         /** Lifts an `F` computation into [WriterT] with an empty log. */
         fun <F, W: Monoid<*, W>, A> lift(monad: Monad<F>, type: Class<W>, v: K1<F, A>): WriterT<F, W, A> = instance(monad, type).lift(v)
+        /** Lifts an [IO] computation through the base monad's MonadIO instance. */
+        fun <F, W: Monoid<*, W>, A> liftIO(monad: MonadIO<F>, type: Class<W>, v: IO<A>): WriterT<F, W, A> {
+            return object: WriterTMonadIO<F, W> {
+                override val monad = monad
+                override val type = type
+            }.liftIO(v)
+        }
 
         private fun <F, W: Monoid<*, W>> instance(monad: Monad<F>, type: Class<W>) = object: WriterTMonadWriter<F, W>, WriterTMonadTrans<F, W> {
             override val monad = monad
