@@ -1,6 +1,8 @@
 package com.github.kotlinz.kotlinz.data.maybe
 
 import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.data.either.Either
+
 import com.github.kotlinz.kotlinz.data.ior.Ior
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
@@ -13,6 +15,8 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * Use it instead of nullable types when a computation may produce no result and you want to
  * compose such computations with `fmap`/`bind`, combine alternatives with `orElse`, or traverse them.
  *
+ * Instances: Functor, Applicative, Selective, Monad, Alternative, MonadPlus, Foldable, Traversable.
+
  * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, Foldable, Traversable, Filterable, Witherable.
 
  * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, Foldable, Traversable, Semialign, Align, Zip.
@@ -83,6 +87,13 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
     /** Turns a `Maybe` of `G` effects into a `G` effect of `Maybe`. */
     fun <G, A> sequence(applicative: Applicative<G>, v: K1<T, K1<G, A>>): K1<G, K1<T, A>> = traversable.sequence(applicative, v)
     private val traversable = object: MaybeTraversable {}
+
+    // Selective
+    /** Runs [fn] only when [fab] is `Just(Left)`, applying it to the left value. */
+    fun <A, B> select(fab: K1<T, Either<A, B>>, fn: K1<T, (A) -> B>): Maybe<B> = selective.select(fab, fn)
+    /** Chooses [t] or [e] depending on [cond]; only the chosen branch is inspected. */
+    fun <A> ifS(cond: K1<T, Boolean>, t: K1<T, A>, e: K1<T, A>): Maybe<A> = narrow(selective.ifS(cond, t, e))
+    private val selective = object: MaybeSelective {}
 
     // Filterable
     /** Flattens a `Maybe<Maybe<A>>`, treating an inner [None] as dropped. */

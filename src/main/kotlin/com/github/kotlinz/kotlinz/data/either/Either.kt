@@ -14,6 +14,10 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * Use it for computations that can fail with a typed error and should short-circuit on the first failure.
  * Right-biased: [fmap], [ap] and [bind] act on the [Right] value and pass a [Left] through unchanged.
  *
+ * Instances: Functor, Applicative, Selective, Monad, MonadError (error type `L`), Foldable, Traversable and Bifunctor.
+
+ * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor and Bifoldable.
+
  * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor, Bifoldable and, for a monoidal left type, Filterable and Witherable.
 
  * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor, Bifoldable and Bitraversable.
@@ -77,6 +81,13 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
     /** Creates a [Left] holding the error [e]. */
     fun <L, R> raiseError(e: L): Either<L, R> = monadError<L>().raiseError(e)
     private fun <L> monadError() = object: EitherMonadError<L> {}
+
+    // Selective
+    /** Runs [fn] only when [fab] is `Right(Left)`, applying it to the inner left value. */
+    fun <L, A, B> select(fab: K1<K1<T, L>, Either<A, B>>, fn: K1<K1<T, L>, (A) -> B>): Either<L, B> = selective<L>().select(fab, fn)
+    /** Chooses [t] or [e] depending on [cond]; only the chosen branch is inspected. */
+    fun <L, A> ifS(cond: K1<K1<T, L>, Boolean>, t: K1<K1<T, L>, A>, e: K1<K1<T, L>, A>): Either<L, A> = narrow(selective<L>().ifS(cond, t, e))
+    private fun <L> selective() = object: EitherSelective<L> {}
   }
 
   // Monad

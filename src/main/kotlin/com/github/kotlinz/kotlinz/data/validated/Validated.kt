@@ -67,6 +67,11 @@ sealed class Validated<E, A>: K2<Validated.T, E, A> {
     /** Lifts a ternary function into [Validated], accumulating errors. */
     fun <E: Semigroup<*, E>, A, B, C, D> liftA3(type: Class<E>, f: (A, B, C) -> D) = applicativeOps(type).liftA3(f)
     private fun <E: Semigroup<*, E>> applicativeOps(type: Class<E>) = object: ValidatedApplicativeOps<E> { override val type = type }
+
+    // Selective
+    /** Runs [fn] only when [fab] is `Valid(Left)`; an [Invalid] [fab] is returned as is. */
+    fun <E: Semigroup<*, E>, A, B> select(type: Class<E>, fab: K1<K1<T, E>, Either<A, B>>, fn: K1<K1<T, E>, (A) -> B>): Validated<E, B> =
+      object: ValidatedSelective<E> { override val type = type }.select(fab, fn)
   }
 
   // Functor
