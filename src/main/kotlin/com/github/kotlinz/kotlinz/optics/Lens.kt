@@ -5,6 +5,7 @@ import com.github.kotlinz.kotlinz.data.forget.Forget
 import com.github.kotlinz.kotlinz.data.forget.ForgetStrong
 import com.github.kotlinz.kotlinz.data.function.Function1
 import com.github.kotlinz.kotlinz.data.function.Function1Strong
+import com.github.kotlinz.kotlinz.type.profunctor.Choice
 import com.github.kotlinz.kotlinz.type.profunctor.Strong
 
 /**
@@ -26,9 +27,12 @@ import com.github.kotlinz.kotlinz.type.profunctor.Strong
  * age.modify { it + 1 }(Person("Ann", 30))   // Person(Ann, 31)
  * ```
  */
-interface Lens<S, T, A, B> {
+interface Lens<S, T, A, B> : Optional<S, T, A, B> {
   /** Lifts [pab] through this lens using [strong]. */
   fun <P, F> runStrong(strong: Strong<P, F>, pab: K3<P, F, A, B>): K3<P, F, S, T>
+
+  override fun <P, F, Q> runOptional(profunctor: Q, pab: K3<P, F, A, B>): K3<P, F, S, T> where Q : Strong<P, F>, Q : Choice<P, F> =
+    runStrong(profunctor, pab)
 
   /** Hosts ready-made lenses such as [first] and [second]. */
   companion object
