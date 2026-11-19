@@ -17,6 +17,8 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  *
  * Instances: Functor, Applicative, Selective, Monad, Alternative, MonadPlus, Foldable, Traversable.
 
+ * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, Foldable, Traversable, Filterable, Witherable.
+
  * Instances: Functor, Applicative, Monad, Alternative, MonadPlus, Foldable, Traversable, Semialign, Align, Zip.
  *
  * ```kotlin
@@ -93,6 +95,11 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
     fun <A> ifS(cond: K1<T, Boolean>, t: K1<T, A>, e: K1<T, A>): Maybe<A> = narrow(selective.ifS(cond, t, e))
     private val selective = object: MaybeSelective {}
 
+    // Filterable
+    /** Flattens a `Maybe<Maybe<A>>`, treating an inner [None] as dropped. */
+    fun <A> catMaybes(v: K1<T, Maybe<A>>): Maybe<A> = filterable.catMaybes(v)
+    private val filterable = object: MaybeFilterable {}
+
     // Align
     /** Returns [None], the identity of [align]. */
     fun <A> nil(): Maybe<A> = align.nil()
@@ -121,6 +128,19 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
   /** Applies an effectful [f] to the value and collects the result inside [applicative]. */
   fun <G, B> traverse(applicative: Applicative<G>, f: (A) -> K1<G, B>): K1<G, K1<T, B>> = traversable.traverse(applicative, f, this)
   private val traversable = object: MaybeTraversable {}
+
+  // Filterable / Witherable
+  /** Maps the value with [f], becoming [None] when [f] does. */
+  infix fun <B> mapFilter(f: (A) -> Maybe<B>): Maybe<B> = witherable.mapFilter(f, this)
+  /** Keeps the value only when it satisfies [p]. */
+  infix fun filter(p: (A) -> Boolean): Maybe<A> = witherable.filter(p, this)
+  /** Maps the value with the partial function [f], becoming [None] when [f] returns `null`. */
+  infix fun <B: Any> collect(f: (A) -> B?): Maybe<B> = witherable.collect(f, this)
+  /** Runs the effectful [f] on the value, keeping its [Just] result inside the effect. */
+  fun <G, B> wither(applicative: Applicative<G>, f: (A) -> K1<G, Maybe<B>>): K1<G, K1<T, B>> = witherable.wither(applicative, f, this)
+  /** Keeps the value only when the effectful predicate [p] yields true. */
+  fun <G> filterA(applicative: Applicative<G>, p: (A) -> K1<G, Boolean>): K1<G, K1<T, A>> = witherable.filterA(applicative, p, this)
+  private val witherable = object: MaybeWitherable {}
 
   // Semialign / Zip
   /** Pairs this with [m], keeping whichever values are present. */
