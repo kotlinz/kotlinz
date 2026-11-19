@@ -23,32 +23,47 @@ hero:
 features:
   - icon: 🧩
     title: Type classes
-    details: Functor, Applicative, Monad, Traversable, MTL-style classes, Profunctor, Arrow and more, as ordinary interfaces over the lightweight K1 encoding.
+    details: Functor, Applicative, Selective, Monad, Traversable, Filterable, Align, MTL-style classes, Profunctor, Arrow and more, as ordinary interfaces over the lightweight K1 encoding.
     link: /type-classes/
     linkText: Explore the hierarchy
   - icon: 📦
     title: Data types
-    details: Maybe, Either, Try, Validated, Ior, Eval, IO, Reader, Writer, State, RWS, Cont, ListK, NonEmptyList and functor combinators.
+    details: Maybe, Either, Try, Validated, Ior, Eval, IO, Reader, Writer, State, RWS, Cont, Select, ListK, NonEmptyList and functor combinators, with Eq, Order, Show and Hash instances.
     link: /data-types
     linkText: Browse data types
+  - icon: 🌳
+    title: Data structures
+    details: LazyList, Chain, Tree, NonEmptySet, NonEmptyMap and ListZipper, with Foldable1, Traversable1, Align and Witherable instances.
+    link: /data-structures
+    linkText: Pick a structure
+  - icon: ⚡
+    title: Effects
+    details: IO with Resource and Ref, a position-aware Parser, a pure random Gen and backtracking Logic.
+    link: /effects
+    linkText: Run effects
   - icon: 🥞
     title: Monad transformers
-    details: MaybeT, EitherT, ReaderT, StateT and WriterT stack effects on top of any monad, with matching MTL instances.
+    details: Fifteen transformers, from MaybeT, EitherT and StateT to RWST, ContT, ListT, LogicT and FreeT, with lifted MTL instances, MonadTrans and MFunctor.
     link: /transformers
     linkText: Stack effects
+  - icon: 🔍
+    title: Optics
+    details: Profunctor-encoded Iso, Lens, Prism, Optional and Traversal, plus Getter, Fold and Setter, all composable with andThen.
+    link: /optics
+    linkText: Focus on data
   - icon: ✨
     title: fx comprehension
     details: Haskell do-notation and Scala for-comprehensions, built on Kotlin coroutines, available on the companions of most monads.
     link: /fx
     linkText: Write fx blocks
   - icon: 🔭
-    title: Comonads
-    details: Store, Env, Traced, Cofree and Density for context-dependent computations, alongside the Comonad type class.
+    title: Comonads and automata
+    details: Store, Env, Traced, Cofree and their transformers, plus Moore and Mealy machines and composable folds.
     link: /comonads
     linkText: Meet the comonads
   - icon: 🧮
     title: Category theory
-    details: Natural transformations, adjunctions, Yoneda, Codensity, Kan extensions, Day convolution, Free / FreeAp and recursion schemes.
+    details: Natural transformations, adjunctions, Yoneda, Kan extensions, Day convolution, Free / FreeAp / Freer / FreeArrow and recursion schemes over Fix, Mu and Nu.
     link: /category-theory
     linkText: Go deeper
 ---

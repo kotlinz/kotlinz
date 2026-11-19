@@ -114,5 +114,6 @@ check(ListK.narrow(describe(object : ListKFunctor {}, listKOf(1, 2))) == listKOf
 
 - [Higher-kinded types and conventions](hkt.md) explains the `K1` encoding that everything else builds on.
 - [Type classes](type-classes/README.md) covers the hierarchy and which data type implements which class.
-- [Data types](data-types.md) tours `Maybe`, `Either`, `Validated`, `IO`, `State` and friends.
+- [Data types](data-types.md) tours `Maybe`, `Either`, `Validated`, `IO`, `State` and friends;
+  [Data structures](data-structures.md), [Effects](effects.md) and [Optics](optics.md) cover the rest.
 - The [guides overview](README.md) lists every guide in a suggested reading order.

@@ -15,10 +15,12 @@ interface Semigroup<A, Self: Semigroup<A, Self>> { fun op(a: Self, b: Self): Sel
 interface Monoid<A, Self: Monoid<A, Self>>: Semigroup<A, Self> { fun mzero(): Self }
 interface Group<A, Self: Group<A, Self>>: Monoid<A, Self> { fun inverse(a: Self): Self }
 interface Band<A, Self: Band<A, Self>>: Semigroup<A, Self>   // op(a, a) == a
+interface CommutativeMonoid<A, Self: CommutativeMonoid<A, Self>>: Monoid<A, Self>   // op(a, b) == op(b, a)
+interface Monus<A, Self: Monus<A, Self>>: CommutativeMonoid<A, Self> { fun monus(a: Self, b: Self): Self }
 ```
 
 Each interface has companion helpers that take the class: `Semigroup.op(type, a, b)`, `Monoid.mzero(type)`,
-`Group.inverse(type, a)`, and likewise for `Semiring` and the lattices.
+`Group.inverse(type, a)`, `Monus.monus(type, a, b)`, and likewise for `Semiring`, `Ring`, `Field` and the lattices.
 
 ```kotlin
 import com.github.kotlinz.kotlinz.data.monoid.SumMonoid
@@ -33,15 +35,27 @@ check(Group.inverse(sum, SumMonoid(5)) == SumMonoid(-5))
 check(SumMonoid().op(SumMonoid(1), SumMonoid(2)) == SumMonoid(3))
 ```
 
+### Value-level structures vs. instance-style type classes
+
+The algebraic structures on this page are *value-level*: the wrapper value itself (`SumMonoid(3)`) carries the
+operations, and generic code receives a `Class<M>`. The comparison classes `Eq`, `Order`, `Show` and `Hash` work the
+other way round: they are ordinary instance interfaces over a plain type (`Eq<Int>`, `Order<List<A>>`), passed as
+values just like `Functor` instances, with data-type instances such as `MaybeEq` or `EitherOrder`. See
+[Eq, Order, Show and Hash](type-classes/eq-order-show-hash.md). If you need a monoid as a plain value, use
+[`MonoidOf`](#first-class-dictionaries-monoidof-and-semigroupof).
+
 ## Provided monoids
 
 | Class | Wraps | `op` | identity | Also | Constructor helper |
 |---|---|---|---|---|---|
-| `SumMonoid` / `LongSumMonoid` | `Int` / `Long` | `+` | `0` | `Group` | `toSumMonoid()` |
-| `ProductMonoid` / `LongProductMonoid` | `Int` / `Long` | `*` | `1` | | `toProductMonoid()` |
-| `XorMonoid` | `Boolean` | `xor` | `false` | `Group` | `toXorMonoid()` |
-| `AllMonoid` | `Boolean` | `&&` | `true` | `Band` | `toAllMonoid()` |
-| `AnyMonoid` | `Boolean` | `\|\|` | `false` | `Band` | `toAnyMonoid()` |
+| `SumMonoid` / `LongSumMonoid` | `Int` / `Long` | `+` | `0` | `Group`, `CommutativeMonoid` | `toSumMonoid()` |
+| `ProductMonoid` / `LongProductMonoid` | `Int` / `Long` | `*` | `1` | `CommutativeMonoid` | `toProductMonoid()` |
+| `NaturalMonoid` | `Long` (non-negative) | `+` (throws on overflow) | `0` | `Monus` (truncated subtraction) | `toNaturalMonoid()` |
+| `XorMonoid` | `Boolean` | `xor` | `false` | `Group`, `CommutativeMonoid` | `toXorMonoid()` |
+| `AllMonoid` | `Boolean` | `&&` | `true` | `Band`, `CommutativeMonoid` | `toAllMonoid()` |
+| `AnyMonoid` | `Boolean` | `\|\|` | `false` | `Band`, `CommutativeMonoid` | `toAnyMonoid()` |
+| `SetMonoid<A>` | `Set<A>` | union | `{}` | `Band`, `Monus` (set difference) | `toSetMonoid()` |
+| `MultisetMonoid<A>` | `Map<A, Int>` (counts) | adds multiplicities | `{}` | `Monus` (multiset difference) | `toMultisetMonoid()` (from a `List`) |
 | `StringMonoid` | `String` | concatenation | `""` | | `toStringMonoid()` |
 | `ListMonoid` | `List<*>` | concatenation | `[]` | | `toListMonoid()` |
 | `FirstMonoid<A>` / `LastMonoid<A>` | `Maybe<A>` | first / last `Just` | `None` | `Band` | `toFirstMonoid()` / `toLastMonoid()` |
@@ -86,7 +100,7 @@ Note that `EndoMonoid` composes right to left (`op(f, g)` is `f ∘ g`), just li
 ## Caveats
 
 - **Unchecked casts.** `Foo::class.java` for a generic class `Foo<A>` is a raw class, so `FirstMonoid`,
-  `LastMonoid`, `MaxMonoid`, `MinMonoid`, `DualMonoid` and `EndoMonoid` need `as Class<Foo<X>>` with
+  `LastMonoid`, `MaxMonoid`, `MinMonoid`, `DualMonoid`, `EndoMonoid`, `SetMonoid` and `MultisetMonoid` need `as Class<Foo<X>>` with
   `@Suppress("UNCHECKED_CAST")`.
 - **`ListMonoid` is untyped.** It stores a `List<*>`, so reading the elements back requires a cast.
 - **Reflection.** `Monoid.op(type, ...)` instantiates `type` through its no-argument constructor every time. Your own
@@ -94,10 +108,49 @@ Note that `EndoMonoid` composes right to left (`op(f, g)` is `f ∘ g`), just li
 - **`DualMonoid` / `MaxMonoid` / `MinMonoid` wrap `Maybe`** so that an identity exists for any `M` / `A`.
 - Laws are not enforced by the types; the test suite checks them for the built-in instances.
 
-## Semiring
+## Commutative monoids and Monus
 
-`Semiring<A, Self>` has `plus`, `times`, `zero` and `one`. Instances: `IntSemiring`, `LongSemiring`
-(arithmetic) and `BooleanSemiring` (`||` / `&&`), built with `toSemiring()`.
+`CommutativeMonoid` is a marker for monoids whose `op` is commutative, so elements may be combined in any order
+(folding unordered collections, merging partial results). It adds no operations. `Monus` extends it with
+*truncated subtraction*: `monus(a, b)` removes as much of `b` from `a` as possible without going below `mzero()`.
+Instances: `NaturalMonoid` (`5 ∸ 3 == 2`, `3 ∸ 5 == 0`), `MultisetMonoid<A>` and `SetMonoid<A>` (set difference).
+
+```kotlin
+import com.github.kotlinz.kotlinz.data.monoid.MultisetMonoid
+import com.github.kotlinz.kotlinz.data.monoid.NaturalMonoid
+import com.github.kotlinz.kotlinz.data.monoid.SetMonoid
+import com.github.kotlinz.kotlinz.data.monoid.toMultisetMonoid
+import com.github.kotlinz.kotlinz.data.monoid.toNaturalMonoid
+import com.github.kotlinz.kotlinz.data.monoid.toSetMonoid
+import com.github.kotlinz.kotlinz.type.group.Monoid
+import com.github.kotlinz.kotlinz.type.group.Monus
+
+val naturals = NaturalMonoid::class.java
+check(Monus.monus(naturals, 5L.toNaturalMonoid(), 3L.toNaturalMonoid()) == NaturalMonoid(2))
+check(Monus.monus(naturals, 3L.toNaturalMonoid(), 5L.toNaturalMonoid()) == NaturalMonoid(0))
+
+@Suppress("UNCHECKED_CAST")
+val bags = MultisetMonoid::class.java as Class<MultisetMonoid<String>>
+val stock = listOf("apple", "apple", "pear").toMultisetMonoid()
+val sold = listOf("apple", "plum").toMultisetMonoid()
+check(Monus.monus(bags, stock, sold) == MultisetMonoid(mapOf("apple" to 1, "pear" to 1)))
+check(Monoid.op(bags, stock, sold).count("apple") == 3)
+
+@Suppress("UNCHECKED_CAST")
+val sets = SetMonoid::class.java as Class<SetMonoid<Int>>
+check(Monus.monus(sets, setOf(1, 2, 3).toSetMonoid(), setOf(2).toSetMonoid()) == SetMonoid(setOf(1, 3)))
+```
+
+`NaturalMonoid` and `MultisetMonoid` validate their contents: constructing them with a negative value or a
+non-positive count throws `IllegalArgumentException`, and `NaturalMonoid` addition throws `ArithmeticException` on
+overflow instead of wrapping.
+
+## Semiring, Ring and Field
+
+`Semiring<A, Self>` has `plus`, `times`, `zero` and `one`. `Ring` adds additive inverses (`negate`, `minus`), and
+`Field` adds multiplicative inverses (`reciprocal`, `div`). Instances: `IntSemiring` and `LongSemiring` (arithmetic,
+both `Ring`s despite the name) and `BooleanSemiring` (`||` / `&&`), built with `toSemiring()`; and `DoubleField`,
+built with `toField()`.
 
 ```kotlin
 import com.github.kotlinz.kotlinz.data.semiring.BooleanSemiring
@@ -109,6 +162,25 @@ val ints = IntSemiring::class.java
 check(Semiring.times(ints, Semiring.plus(ints, 2.toSemiring(), 3.toSemiring()), 4.toSemiring()) == IntSemiring(20))
 check(Semiring.one(BooleanSemiring::class.java) == BooleanSemiring(true))
 ```
+
+```kotlin
+import com.github.kotlinz.kotlinz.data.semiring.DoubleField
+import com.github.kotlinz.kotlinz.data.semiring.IntSemiring
+import com.github.kotlinz.kotlinz.data.semiring.toField
+import com.github.kotlinz.kotlinz.data.semiring.toSemiring
+import com.github.kotlinz.kotlinz.type.ring.Field
+import com.github.kotlinz.kotlinz.type.ring.Ring
+
+check(Ring.minus(IntSemiring::class.java, 3.toSemiring(), 5.toSemiring()) == IntSemiring(-2))
+check(Ring.negate(IntSemiring::class.java, 7.toSemiring()) == IntSemiring(-7))
+
+val doubles = DoubleField::class.java
+check(Field.div(doubles, 3.0.toField(), 2.0.toField()) == DoubleField(1.5))
+check(Field.reciprocal(doubles, 4.0.toField()) == DoubleField(0.25))
+```
+
+`DoubleField` follows IEEE 754: the laws hold only approximately because of rounding, `NaN` breaks them, and
+`reciprocal(zero())` is `Infinity`. Equality is that of boxed doubles, so `-0.0` and `0.0` differ.
 
 ## Lattices
 

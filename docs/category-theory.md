@@ -1,8 +1,8 @@
 # Category-theory constructs
 
 This guide covers the more abstract building blocks: natural transformations, adjunctions, the Yoneda family,
-Kan extensions, Day convolution, free structures and recursion schemes. They all rely on the encoding described in
-[Higher-kinded types](hkt.md).
+Kan extensions, Day convolution, free structures, fixed points and recursion schemes. They all rely on the encoding
+described in [Higher-kinded types](hkt.md).
 
 | Construct | Package | Instances / entry points |
 |---|---|---|
@@ -13,9 +13,16 @@ Kan extensions, Day convolution, free structures and recursion schemes. They all
 | `Ran<G, H, A>` / `Lan<G, H, A>` | `data.kan` | `Functor`; `toRan` / `fromRan` / `gran`, `toLan` / `fromLan` / `glan` |
 | `Day<F, G, A>` | `data.day` | `Functor`, `Applicative`, `Comonad`; `dap`, `swapped`, `trans1`, `trans2` |
 | `Free<F, A>` | `data.free` | `Monad`; `liftF`, `foldMap`, `fx` |
+| `Freer<F, A>` | `data.freer` | `Monad`; `liftF` / `singleton`, `foldMap` / `interpret`, `view`, `fx` |
 | `FreeAp<F, A>` | `data.freeap` | `Applicative`; `lift`, `foldMap`, `analyze`, `hoist`, `retract` |
+| `FreeSelective<F, A>` | `data.freeselective` | `Selective`; `lift`, `foldMap`, `effects`, `necessaryEffects`, `analyze`, `hoist`, `retract` |
+| `FreeCategory<P, A, B>` / `FreeArrow<P, A, B>` | `data.freecategory` / `data.freearrow` | `Category` / `Arrow`; `lift`, `foldMap` with a `QuiverTransformation` |
 | `Cofree<F, A>` | `data.cofree` | `Comonad`; see [Comonads](comonads.md#cofree) |
-| `Fix<F>` | `data.fix` | `cata`, `ana`, `hylo`, `para`, `apo` |
+| `Fix<F>` | `data.fix` | `cata`, `ana`, `hylo`, `para`, `apo`, `histo`, `zygo`, `prepro`, `elgot`, `futu`, `postpro`, `coelgot` |
+| `Mu<F>` / `Nu<F>` | `data.fix` | least / greatest fixed point; `cata`, `ana` / `unfold`, `embed`, `project`, conversions |
+
+Free monad transformers, comonad transformers, profunctor constructions and the co-Kleisli arrow are covered
+elsewhere; see [Related constructs in other guides](#related-constructs-in-other-guides).
 
 ## Natural transformations
 
@@ -270,6 +277,139 @@ check(State.narrow(sum.foldMap(toState, stateMonad)).eval(mapOf("a" to 1, "b" to
 (This block continues the previous one and reuses `KV`, `toState` and `stateMonad`.) In `x ap f`, the effects of
 `f` run before those of `x`.
 
+## Freer monad
+
+`Freer<F, A>` is the *operational* (freer) monad: like `Free`, it needs no `Functor` for the instruction set, but
+it stores continuations in a type-aligned queue ("reflection without remorse"), so `bind` is O(1) and both building
+and stepping through left-nested programs are stack-safe. Interpret it with `foldMap` / `interpret` into any monad
+(stack-safe into a `MonadRec`), or write a custom interpreter by pattern matching on `view()`, which exposes the
+next instruction and its continuation:
+
+<!-- continue -->
+```kotlin
+import com.github.kotlinz.kotlinz.data.freer.Freer
+import com.github.kotlinz.kotlinz.data.freer.FreerView
+
+val freerProgram: Freer<KV.T, Int> = Freer.fx {
+  Freer.liftF(KV.Store("a", 20)).bind()
+  Freer.liftF(KV.Load("a")).bind() * 2 + 2
+}
+
+check(State.narrow(freerProgram.interpret(toState, stateMonad)).eval(emptyMap()) == 42)
+
+// A pure interpreter written directly against view()
+@Suppress("UNCHECKED_CAST")
+tailrec fun <A> runPure(program: Freer<KV.T, A>, memory: Memory): A = when (val step = program.view()) {
+  is FreerView.Return -> step.value
+  is FreerView.Bind<KV.T, *, A> -> {
+    val bind = step as FreerView.Bind<KV.T, Any?, A>
+    when (val op = bind.instruction as KV<*>) {
+      is KV.Store -> runPure(bind.continuation(Unit), memory + (op.key to op.value))
+      is KV.Load -> runPure(bind.continuation(memory.getValue(op.key)), memory)
+    }
+  }
+}
+
+check(runPure(freerProgram, emptyMap()) == 42)
+```
+
+## Free selective functor
+
+`FreeSelective<F, A>` sits between `FreeAp` (no branching) and `Free` (arbitrary, opaque branching): a program is a
+chain of instructions where each may be skipped depending on earlier results, built with the `Selective`
+combinators (`select`, `branch`, `ifS`, `whenS`; see [Selective](type-classes/selective.md)). Every *possible*
+instruction is still known up front, so `effects()` lists all instructions that may run and `necessaryEffects()`
+those that always run. `foldMap` interprets it into any `Selective` (for a monad, mix in `MonadSelective`) and runs
+only the instructions on the branch taken.
+
+```kotlin
+import com.github.kotlinz.kotlinz.K1
+import com.github.kotlinz.kotlinz.data.freeselective.FreeSelective
+import com.github.kotlinz.kotlinz.data.maybe.Maybe
+import com.github.kotlinz.kotlinz.data.maybe.MaybeSelective
+import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
+
+class Read<A>(val key: String, val parse: (String) -> A) : K1<Read.T, A> {
+  class T
+}
+
+fun <A> read(key: String, parse: (String) -> A): FreeSelective<Read.T, A> = FreeSelective.lift(Read(key, parse))
+
+fun config(values: Map<String, String>) = object : NaturalTransformation<Read.T, Maybe.T> {
+  @Suppress("UNCHECKED_CAST")
+  override fun <A> invoke(fa: K1<Read.T, A>): Maybe<A> =
+    (fa as Read<A>).let { r -> values[r.key]?.let { Maybe.Just(r.parse(it)) } ?: Maybe.None() }
+}
+
+val s = FreeSelective.selective<Read.T>()
+val logLevel = FreeSelective.narrow(s.ifS(read("verbose") { it == "yes" }, read("level") { it }, FreeSelective.pure("quiet")))
+
+check(logLevel.effects().map { (it as Read<*>).key } == listOf("verbose", "level"))
+check(logLevel.necessaryEffects().map { (it as Read<*>).key } == listOf("verbose"))
+
+val maybe = object : MaybeSelective {}
+check(Maybe.narrow(logLevel.foldMap(config(mapOf("verbose" to "no")), maybe)) == Maybe.Just("quiet"))
+check(Maybe.narrow(logLevel.foldMap(config(mapOf("verbose" to "yes", "level" to "debug")), maybe)) == Maybe.Just("debug"))
+check(Maybe.narrow(logLevel.foldMap(config(mapOf("verbose" to "yes")), maybe)) == Maybe.None<String>())
+```
+
+`analyze(monoidClass, nt)` folds every possible instruction into a monoid through `Const`, as with `FreeAp`.
+
+## Free category and free arrow
+
+`FreeCategory<P, A, B>` is the free category over a *quiver* `P`: a type of abstract arrows encoded as
+`K2<P, A, B>`. Paths are built from `id`, `lift` and `andThen` / `compose`, and interpreted with
+`foldMap(category, nt)`, where `nt` is a `QuiverTransformation<P, T, F>` mapping each quiver arrow to an arrow of
+the target `Category<T, F>`. `FreeArrow<P, A, B>` additionally embeds plain functions (`arr`) and supports `first`,
+`second`, `split` and `combine`; it is interpreted into any `Arrow`. The same description can be run by different
+interpreters, for example to execute it or to list its steps.
+
+```kotlin
+import com.github.kotlinz.kotlinz.K2
+import com.github.kotlinz.kotlinz.K3
+import com.github.kotlinz.kotlinz.data.freearrow.FreeArrow
+import com.github.kotlinz.kotlinz.data.freecategory.FreeCategory
+import com.github.kotlinz.kotlinz.data.freecategory.QuiverTransformation
+import com.github.kotlinz.kotlinz.data.function.Function1
+import com.github.kotlinz.kotlinz.data.function.Function1Arrow
+import com.github.kotlinz.kotlinz.data.function.Function1Category
+
+sealed class Step<A, B> : K2<Step.T, A, B> {
+  class T
+  object Parse : Step<String, Int>()
+  object Twice : Step<Int, Int>()
+  object Show : Step<Int, String>()
+}
+
+object StepToFunction1 : QuiverTransformation<Step.T, Function1.T, Unit> {
+  @Suppress("UNCHECKED_CAST")
+  override fun <A, B> invoke(arrow: K2<Step.T, A, B>): K3<Function1.T, Unit, A, B> = when (arrow as Step<A, B>) {
+    Step.Parse -> Function1 { s: String -> s.toInt() }
+    Step.Twice -> Function1 { n: Int -> n * 2 }
+    Step.Show -> Function1 { n: Int -> "#$n" }
+  } as K3<Function1.T, Unit, A, B>
+}
+
+object StepNames : QuiverTransformation<Step.T, Function1.T, Unit> {
+  @Suppress("UNCHECKED_CAST")
+  override fun <A, B> invoke(arrow: K2<Step.T, A, B>): K3<Function1.T, Unit, A, B> =
+    Function1 { log: List<String> -> log + arrow::class.simpleName!! } as K3<Function1.T, Unit, A, B>
+}
+
+val pipeline = FreeCategory.lift(Step.Parse) andThen FreeCategory.lift(Step.Twice) andThen FreeCategory.lift(Step.Show)
+check(Function1.narrow(pipeline.foldMap(object : Function1Category {}, StepToFunction1))("21") == "#42")
+
+@Suppress("UNCHECKED_CAST")
+val steps = Function1.narrow(pipeline.foldMap(object : Function1Category {}, StepNames)) as Function1<List<String>, List<String>>
+check(steps(emptyList()) == listOf("Parse", "Twice", "Show"))
+
+val both = FreeArrow.lift(Step.Twice) split FreeArrow.arr { s: String -> s.length }
+check(Function1.narrow(both.foldMap(object : Function1Arrow {}, StepToFunction1))(Pair(2, "ab")) == Pair(4, 2))
+```
+
+The step-listing interpreter needs an unchecked cast, because a `QuiverTransformation` must preserve the arrow's
+endpoint types while the log function works on `List<String>` regardless of them.
+
 ## Fix and recursion schemes
 
 `Fix<F>` ties the knot of a non-recursive *base functor* `F`, and recursion schemes separate the recursion from the
@@ -282,10 +422,18 @@ per-layer logic:
 | `hylo` | unfold then fold, without building the `Fix` | refold |
 | `para` | `(F<Pair<Fix<F>, A>>) -> A` | fold with access to the original substructures |
 | `apo` | `(A) -> F<Either<Fix<F>, A>>` | unfold that can stop early with a finished `Fix` |
+| `histo` | `(F<Cofree<F, A>>) -> A` | fold that sees the results for *all* substructures (course-of-values) |
+| `zygo` | helper `(F<B>) -> B` and `(F<Pair<B, A>>) -> A` | fold with an auxiliary fold computed alongside |
+| `prepro` | natural transformation `F ~> F`, then `(F<A>) -> A` | fold that transforms deeper layers more often |
+| `elgot` | `(A) -> Either<B, F<A>>`, then `(F<B>) -> B` | refold whose unfold may short-circuit with a result |
+| `futu` | `(A) -> F<Free<F, A>>` | unfold that emits several layers per step |
+| `postpro` | `(A) -> F<A>`, then `F ~> F` | unfold that transforms deeper layers more often |
+| `coelgot` | `(A, () -> F<B>) -> B` and `(A) -> F<A>` | refold whose fold sees the seed and may skip unfolding further |
 
-The schemes are top-level functions in `data.fix` (`cata(functor, algebra)` returns a function), and also members /
-companion functions on `Fix` (`fix.cata(...)`, `Fix.ana(...)`). The type aliases `Algebra`, `Coalgebra`,
-`RAlgebra` and `RCoalgebra` name the per-layer functions.
+The schemes are top-level functions in `data.fix` (`cata(functor, algebra)` returns a function); the basic ones are
+also members / companion functions on `Fix` (`fix.cata(...)`, `fix.para(...)`, `Fix.ana(...)`, `Fix.apo(...)`).
+The type aliases `Algebra`, `Coalgebra`, `RAlgebra`, `RCoalgebra`, `CVAlgebra` and `CVCoalgebra` name the
+per-layer functions.
 
 ```kotlin
 import com.github.kotlinz.kotlinz.K1
@@ -341,6 +489,117 @@ check(!fourToOne.para(functor, ascending))
 check(Fix.ana(functor, { n: Int -> if (n > 3) ListF.Nil() else ListF.Cons(n, n + 1) }, 1).para(functor, ascending))
 ```
 
+The remaining schemes take the same shape. Continuing the example above (reusing `ListF`, `functor`, `sum`,
+`countDown` and `fourToOne`):
+
+<!-- continue -->
+```kotlin
+import com.github.kotlinz.kotlinz.data.either.Either
+import com.github.kotlinz.kotlinz.data.fix.CVAlgebra
+import com.github.kotlinz.kotlinz.data.fix.CVCoalgebra
+import com.github.kotlinz.kotlinz.data.fix.elgot
+import com.github.kotlinz.kotlinz.data.fix.futu
+import com.github.kotlinz.kotlinz.data.fix.histo
+import com.github.kotlinz.kotlinz.data.fix.zygo
+import com.github.kotlinz.kotlinz.data.free.Free
+
+val toList: Algebra<IntListF, List<Int>> = { l ->
+  when (val x = ListF.narrow(l)) {
+    is ListF.Nil -> emptyList()
+    is ListF.Cons -> listOf(x.head) + x.tail
+  }
+}
+val length: Algebra<IntListF, Int> = { l ->
+  when (val x = ListF.narrow(l)) {
+    is ListF.Nil -> 0
+    is ListF.Cons -> x.tail + 1
+  }
+}
+
+// histo: the n-th Fibonacci number, where n is the list length; each layer reads the two previous results
+val fib: CVAlgebra<IntListF, Int> = { l ->
+  when (val x = ListF.narrow(l)) {
+    is ListF.Nil -> 0
+    is ListF.Cons -> when (val before = ListF.narrow(x.tail.tail)) {
+      is ListF.Nil -> 1
+      is ListF.Cons -> x.tail.head + before.tail.head
+    }
+  }
+}
+check(histo(functor, fib)(Fix.ana(functor, countDown, 10)) == 55)
+
+// zygo: weight every element by the length of the rest of the list (4*3 + 3*2 + 2*1 + 1*0)
+val weighted = zygo(functor, length) { l: K1<IntListF, Pair<Int, Int>> ->
+  when (val x = ListF.narrow(l)) {
+    is ListF.Nil -> 0
+    is ListF.Cons -> x.head * x.tail.first + x.tail.second
+  }
+}
+check(weighted(fourToOne) == 20)
+
+// elgot: stop unfolding at 2 and use 100 for the rest (5 + 4 + 3 + 100)
+val shortCircuit = elgot(functor, sum) { n: Int ->
+  if (n == 2) Either.Left(100) else Either.Right<Int, K1<IntListF, Int>>(countDown(n))
+}
+check(shortCircuit(5) == 112)
+
+// futu: emit two layers per step
+val pairs: CVCoalgebra<IntListF, Int> = { n ->
+  if (n <= 0) ListF.Nil() else ListF.Cons(n, Free.liftF(ListF.Cons(n * 10, n - 1)))
+}
+check(futu(functor, pairs)(2).cata(functor, toList) == listOf(2, 20, 1, 10))
+```
+
+### Mu and Nu
+
+`Fix` is one of three fixed-point encodings. `Mu<F>` is the *least* fixed point, Church-encoded as its own fold:
+`mu.cata(algebra)` needs no functor and always terminates for values built from finite data. `Nu<F>` is the
+*greatest* fixed point: a seed together with a coalgebra, expanded one layer at a time by `project(functor)`, so it
+can describe infinite structures such as streams (folding a `Nu` only terminates for finite values). `embed` adds a
+layer in front, and `fromFix` / `toFix` / `toMu` / `toNu` convert between the representations.
+
+<!-- continue -->
+```kotlin
+import com.github.kotlinz.kotlinz.data.fix.Mu
+import com.github.kotlinz.kotlinz.data.fix.Nu
+
+val muList: Mu<IntListF> = Mu.ana(functor, countDown, 4)
+check(muList.cata(sum) == 10)
+check(muList.toFix().cata(functor, toList) == listOf(4, 3, 2, 1))
+
+val naturals: Nu<IntListF> = Nu.unfold<IntListF, Int>({ n -> ListF.Cons(n, n + 1) }, 0)
+
+fun take(n: Int, nu: Nu<IntListF>): List<Int> =
+  if (n == 0) emptyList()
+  else when (val layer = ListF.narrow(nu.project(functor))) {
+    is ListF.Nil -> emptyList()
+    is ListF.Cons -> listOf(layer.head) + take(n - 1, layer.tail)
+  }
+
+check(take(3, naturals) == listOf(0, 1, 2))
+check(take(3, Nu.embed(functor, ListF.Cons(-1, naturals))) == listOf(-1, 0, 1))
+check(Nu.unfold(countDown, 4).cata(functor, sum) == 10)
+check(Nu.unfold(countDown, 3).toMu(functor).cata(sum) == 6)
+```
+
 Limitation: the recursion schemes are **not stack-safe**. A generic `Functor` offers no way to suspend inside
 `fmap`, so every layer consumes a few JVM stack frames, and very deep structures (tens of thousands of layers,
-depending on the stack size) throw `StackOverflowError`.
+depending on the stack size) throw `StackOverflowError`. The same applies to `Mu` / `Nu` folds and conversions.
+
+## Related constructs in other guides
+
+| Construct | Guide |
+|---|---|
+| `FreeT<F, M, A>` (free monad transformer), `MonadTrans` / `MFunctor` | [Monad transformers](transformers.md) |
+| `CofreeT`, `EnvT`, `StoreT`, `TracedT`, `ComonadTrans` | [Comonads](comonads.md) |
+| `Cokleisli<W, A, B>` (co-Kleisli arrows of a comonad), `Moore`, `Mealy`, `Fold` | [Automata](automata.md) |
+| `Star`, `Costar`, `Forget`, `Tagged`, `Procompose`, `Cayley`, `Tambara` | [Bifunctor, Profunctor and Arrow](type-classes/bifunctor-profunctor-arrow.md) |
+| Profunctor optics (`Iso`, `Lens`, `Prism`, `Optional`, `Traversal`, ...) | [Optics](optics.md) |
+
+## Stack safety at a glance
+
+- `Free.foldMap` and `Freer.foldMap` / `interpret` are stack-safe when the target monad implements `MonadRec`
+  (`Identity`, `Eval`, `State`); building left-nested `Freer` programs is always stack-safe.
+- `FreeAp`, `FreeSelective`, `FreeCategory` and `FreeArrow` interpreters recurse over the structure, so very large
+  programs may overflow the stack.
+- Recursion schemes and `Mu` / `Nu` folds are not stack-safe (see above).

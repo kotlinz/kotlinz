@@ -92,3 +92,11 @@ val totalSize = Op.narrow(sizes.divide(
 ))
 check(totalSize.run(Pair("abc", listOf(1, 2))) == SumMonoid(5))
 ```
+
+## Contravariant types vs. `Eq` and `Order`
+
+`Equivalence` and `Comparison` look like `Eq` and `Order`, but they play a different role: they are data types
+(higher-kinded, with `K1<Equivalence.T, A>`) so that they can be `Contravariant` and `Decidable`, while `Eq` /
+`Order` are plain instance values passed to generic code. Use `contramap` / `divide` / `choose` to *build* a
+comparison and `Order.fromComparator(comparison.toComparator())` to hand it to code that expects an `Order`. See
+[Eq, Order, Show and Hash](eq-order-show-hash.md#relation-to-equivalence-and-comparison).

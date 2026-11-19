@@ -5,13 +5,23 @@ These classes abstract over types with two type parameters. They take the tag *b
 
 | Type class | Instances |
 |---|---|
-| `Bifunctor<T>` | `Either`, `Ior`, `Tuple2`, `Writer` |
-| `Profunctor<T, F>` | `Function1`, `Kleisli` |
-| `Strong<T, F>` / `Choice<T, F>` | `Kleisli` (`KleisliStrong<F>`, `KleisliChoice<F>`) |
-| `Compose<T, F>` / `Category<T, F>` | `Function1`, `Kleisli` |
-| `Arrow<T, F>` | `Function1`, `Kleisli` |
-| `ArrowChoice<T, F>` / `ArrowApply<T, F>` | `Kleisli` |
-| `ArrowLoop<T, F>` | none (see below) |
+| `Bifunctor<T>` | `Either`, `Ior`, `Tuple2`, `Validated`, `Writer` |
+| `Bifoldable<T>` / `Bitraversable<T>` | `Either`, `Ior`, `Tuple2`, `Validated` (see [Foldable and Traversable](foldable-traversable.md#bifoldable-and-bitraversable)) |
+| `Profunctor<T, F>` | `Function1`, `Kleisli`, `Star`, `Costar`, `Forget`, `Tagged`, `Procompose`, `Cayley`, `Tambara`, `Cokleisli`, `Mealy`, `Moore`, `Fold` |
+| `Strong<T, F>` | `Function1`, `Kleisli`, `Star`, `Forget`, `Mealy`, `Procompose`, `Cayley`, `Tambara` |
+| `Choice<T, F>` | `Function1`, `Kleisli`, `Star`, `Forget` (needs a monoid), `Tagged` |
+| `Closed<T, F>` | `Function1`, `Star` (over a `Distributive`), `Costar`, `Tagged` |
+| `Traversing<T, F>` | `Function1`, `Star` (over an `Applicative`), `Forget` (needs a monoid) |
+| `Cochoice<T, F>` / `Costrong<T, F>` | `Function1`, `Forget` / `Tagged` |
+| `Compose<T, F>` / `Category<T, F>` | `Function1`, `Kleisli`, `Cokleisli`, `Mealy`, `FreeCategory`, `FreeArrow` |
+| `Arrow<T, F>` | `Function1`, `Kleisli`, `Cokleisli`, `Mealy`, `FreeArrow` |
+| `ArrowChoice<T, F>` | `Kleisli`, `Mealy` |
+| `ArrowApply<T, F>` | `Kleisli` |
+| `ArrowLoop<T, F>` | `Kleisli` over a `MonadFix` (see [below](#arrowloop)) |
+
+`Cokleisli` and the `Mealy` / `Moore` machines and composable `Fold`s are described in [Automata](../automata.md);
+`FreeCategory` and `FreeArrow` in [Category theory](../category-theory.md); the profunctor-encoded optics built on
+`Strong`, `Choice` and `Traversing` in [Optics](../optics.md).
 
 ## Bifunctor
 
@@ -63,6 +73,82 @@ val describe = length.dimap({ n: Int -> "x".repeat(n) }, { len: Int -> "length $
 check(describe(3) == "length 3")
 check((length lmap { n: Int -> n.toString() })(12345) == 5)
 check((length rmap { it * 2 })("abc") == 6)
+```
+
+### More profunctor classes
+
+<!-- nocheck -->
+```kotlin
+interface Closed<T, F>: Profunctor<T, F> { fun <A, B, X> closed(v: K3<T, F, A, B>): K3<T, F, (X) -> A, (X) -> B> }
+interface Traversing<T, F>: Strong<T, F>, Choice<T, F> {
+  fun <S, R, A, B> wander(traversal: Wander<S, R, A, B>, v: K3<T, F, A, B>): K3<T, F, S, R>
+  fun <G, A, B> traverse(traversable: Traversable<G>, v: K3<T, F, A, B>): K3<T, F, K1<G, A>, K1<G, B>>
+}
+interface Cochoice<T, F>: Profunctor<T, F> { fun <A, B, C> unleft(v: K3<T, F, Either<A, C>, Either<B, C>>): K3<T, F, A, B> /* + unright */ }
+interface Costrong<T, F>: Profunctor<T, F> { fun <A, B, C> unfirst(v: K3<T, F, Pair<A, C>, Pair<B, C>>): K3<T, F, A, B> /* + unsecond */ }
+```
+
+`Closed` lifts an arrow to work on functions, `Traversing` lifts it to work on every element of a traversable
+structure (`Wander` is the van Laarhoven traversal, encoded as an interface with a generic method because Kotlin
+has no rank-2 types), and `Cochoice` / `Costrong` are the duals of `Choice` / `Strong`: they *remove* an `Either` or
+a pair component (for `Function1`, `unleft` loops while the result is a `Right`).
+
+### Profunctor data types
+
+| Type | Wraps | Typical use |
+|---|---|---|
+| `Star<F, A, B>` | `(A) -> K1<F, B>` | effectful functions (like `Kleisli`, but needs only a `Functor` / `Applicative`) |
+| `Costar<F, A, B>` | `(K1<F, A>) -> B` | functions that consume a whole structure (folds, aggregations) |
+| `Forget<R, A, B>` | `(A) -> R` | getters and folds: ignores the output type `B` |
+| `Tagged<A, B>` | a value of `B` | review / construction: ignores the input type `A` |
+| `Procompose<P, Q, A, C>` | `Q<A, X>` then `P<X, C>` | composing two different profunctors |
+| `Cayley<F, P, A, B>` | `F<P<A, B>>` | a profunctor under a functor |
+| `Tambara<P, A, B>` | `P<Pair<A, C>, Pair<B, C>>` for every `C` | the free `Strong` profunctor over `P` |
+
+```kotlin
+import com.github.kotlinz.kotlinz.data.either.Either
+import com.github.kotlinz.kotlinz.data.forget.Forget
+import com.github.kotlinz.kotlinz.data.forget.ForgetTraversing
+import com.github.kotlinz.kotlinz.data.function.Function1
+import com.github.kotlinz.kotlinz.data.function.Function1Compose
+import com.github.kotlinz.kotlinz.data.function.Function1Strong
+import com.github.kotlinz.kotlinz.data.listk.ListKTraversable
+import com.github.kotlinz.kotlinz.data.listk.listKOf
+import com.github.kotlinz.kotlinz.data.maybe.Maybe
+import com.github.kotlinz.kotlinz.data.maybe.MaybeApplicative
+import com.github.kotlinz.kotlinz.data.monoidof.MonoidOf
+import com.github.kotlinz.kotlinz.data.procompose.Procompose
+import com.github.kotlinz.kotlinz.data.procompose.collapse
+import com.github.kotlinz.kotlinz.data.star.Star
+import com.github.kotlinz.kotlinz.data.star.StarTraversing
+import com.github.kotlinz.kotlinz.data.tagged.Tagged
+import com.github.kotlinz.kotlinz.data.tagged.TaggedChoice
+import com.github.kotlinz.kotlinz.data.tambara.Tambara
+
+val list = object : ListKTraversable {}
+
+// Star: traverse an effectful function over a list
+val half = Star { n: Int -> if (n % 2 == 0) Maybe.Just(n / 2) else Maybe.None() }
+val starTraversing = object : StarTraversing<Maybe.T> { override val applicative = object : MaybeApplicative {} }
+check(Star.narrow(starTraversing.traverse(list, half))(listKOf(2, 4)) == Maybe.Just(listKOf(1, 2)))
+check(Star.narrow(starTraversing.traverse(list, half))(listKOf(2, 3)) == Maybe.None<Int>())
+
+// Forget: combine the results for every focus with a monoid
+val double = Forget<Int, Int, Int> { it * 2 }
+val sumAll = object : ForgetTraversing<Int> { override val monoid = MonoidOf(0) { a: Int, b: Int -> a + b } }
+check(Forget.narrow(sumAll.traverse(list, double))(listKOf(1, 2, 3)) == 12)
+
+// Tagged: only the output matters
+check(object : TaggedChoice {}.left<Int, Int, String>(Tagged(7)).value == Either.Left<Int, String>(7))
+
+// Procompose: the inner arrow runs first
+val composed = Procompose.of(Function1 { n: Int -> n * 2 }, Function1 { n: Int -> n + 3 })
+check(Function1.narrow(composed.collapse(object : Function1Compose {}))(1) == 8)
+
+// Tambara: a Strong arrow that works for every context type
+val inc = Tambara.of(object : Function1Strong {}, Function1 { n: Int -> n + 1 })
+check(Function1.narrow(inc.run<String>())(Pair(1, "x")) == Pair(2, "x"))
+check(Function1.narrow(inc.untambara(object : Function1Strong {}))(41) == 42)
 ```
 
 ## Category and Arrow
@@ -128,6 +214,35 @@ opposite argument order from `Function1.compose`.
 
 ### ArrowLoop
 
-`ArrowLoop.loop` feeds part of the output back as input. It needs a lazily evaluated feedback value (for `Kleisli`
-it would require `MonadFix`), which strict Kotlin data types cannot provide, so the interface is defined but
-**no instances are provided**.
+<!-- nocheck -->
+```kotlin
+interface ArrowLoop<T, F>: Arrow<T, F> {
+  fun <A, B, D> loop(f: K3<T, F, Pair<A, () -> D>, Pair<B, D>>): K3<T, F, A, B>
+}
+```
+
+`ArrowLoop.loop` feeds the second output `D` back as the second input. Kotlin is strict, so the fed-back value
+arrives as a thunk `() -> D`: the arrow may capture it (for example in a lazily linked structure) but must not force
+it before producing its output. The instance is `KleisliArrowLoop<F>` for a [`MonadFix`](functor-applicative-monad.md#monadfix)
+`F` (the feedback is the `mfix` of the arrow's output), with the companion helper `Kleisli.loop(monadFix, f)`.
+
+```kotlin
+import com.github.kotlinz.kotlinz.data.identity.Identity
+import com.github.kotlinz.kotlinz.data.identity.IdentityMonadFix
+import com.github.kotlinz.kotlinz.data.kleisli.Kleisli
+
+class Stream(val head: Int, val tail: () -> Stream) {
+  fun take(n: Int): List<Int> = if (n == 0) emptyList() else listOf(head) + tail().take(n - 1)
+}
+
+val monad = object : IdentityMonadFix {}
+// The stream refers to itself through the fed-back thunk.
+val repeat = Kleisli.loop(monad, Kleisli(monad) { p: Pair<Int, () -> Stream> ->
+  val stream = Stream(p.first, p.second)
+  Identity(Pair(stream, stream))
+})
+check(Identity.narrow(repeat.run(7)).value.take(3) == listOf(7, 7, 7))
+```
+
+Forcing the thunk inside the arrow (before the output exists) throws `IllegalStateException`, the strict
+counterpart of a diverging `loop` in Haskell.
