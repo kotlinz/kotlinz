@@ -6,6 +6,7 @@ import com.github.kotlinz.kotlinz.data.maybe.Maybe
 import com.github.kotlinz.kotlinz.syntax.MonadScope
 import com.github.kotlinz.kotlinz.syntax.fx
 import com.github.kotlinz.kotlinz.type.monad.Monad
+import com.github.kotlinz.kotlinz.type.transformation.NaturalTransformation
 
 /**
  * Monad transformer that adds optionality ([Maybe]) on top of an arbitrary monad [F].
@@ -13,7 +14,7 @@ import com.github.kotlinz.kotlinz.type.monad.Monad
  * Use it when a computation in some effect `F` (e.g. `IO`) may also produce no result, and you want
  * `bind` to short-circuit on [Maybe.None] without nesting `Maybe` handling inside `F`.
  *
- * Instances: Functor, Applicative, Monad (each requires the underlying `Monad<F>`).
+ * Instances: Functor, Applicative, Monad, MonadTrans (each requires the underlying `Monad<F>`) and MFunctor.
  *
  * ```kotlin
  * val identity = object : IdentityMonad {}
@@ -47,13 +48,13 @@ class MaybeT<F, A>(val monad: Monad<F>, val run: K1<F, Maybe<A>>) : K2<MaybeT.T,
 
         // Transformer
         /** Lifts an `F<A>` into `MaybeT`, treating its result as present. */
-        fun <F, A> lift(monad: Monad<F>, v: K1<F, A>): MaybeT<F, A> = MaybeT(monad, monad.fmap({ a -> Maybe.Just(a) }, v))
+        fun <F, A> lift(monad: Monad<F>, v: K1<F, A>): MaybeT<F, A> = instance(monad).lift(v)
         /** Lifts a plain [Maybe] into `MaybeT`. */
         fun <F, A> fromMaybe(monad: Monad<F>, v: Maybe<A>): MaybeT<F, A> = MaybeT(monad, monad.pure(v))
         /** Creates an absent `MaybeT` value. */
         fun <F, A> none(monad: Monad<F>): MaybeT<F, A> = fromMaybe(monad, Maybe.None())
 
-        private fun <F> instance(monad: Monad<F>) = object: MaybeTMonad<F> { override val monad = monad }
+        private fun <F> instance(monad: Monad<F>) = object: MaybeTMonadTrans<F> { override val monad = monad }
     }
 
     // Monad
@@ -66,6 +67,12 @@ class MaybeT<F, A>(val monad: Monad<F>, val run: K1<F, Maybe<A>>) : K2<MaybeT.T,
 
     /** Runs the computation in [F], substituting [v] when the result is absent. */
     fun getOrElse(v: A): K1<F, A> = monad.fmap({ m: Maybe<A> -> m.getOrElse(v) }, run)
+
+    // MFunctor
+    /** Swaps the base monad using [nt]; [target] is the monad of the new base. */
+    fun <G> hoist(target: Monad<G>, nt: NaturalTransformation<F, G>): MaybeT<G, A> {
+        return object: MaybeTMFunctor<F, G> { override val target = target }.hoist(nt, this)
+    }
 
     private fun instance() = object: MaybeTMonad<F> { override val monad = this@MaybeT.monad }
 }
