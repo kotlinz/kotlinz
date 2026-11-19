@@ -27,9 +27,13 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
   class T
 
   /** The absence of a value. */
-  class None<A>: Maybe<A>()
+  class None<A>: Maybe<A>() {
+    override fun equals(other: Any?): Boolean = other is None<*>
+    override fun hashCode(): Int = 0
+    override fun toString(): String = "None"
+  }
   /** A present [value]. */
-  class Just<A>(val value: A): Maybe<A>()
+  data class Just<A>(val value: A): Maybe<A>()
 
   companion object {
     /** Downcasts a higher-kinded `K1<Maybe.T, A>` back to [Maybe]. */
@@ -120,12 +124,4 @@ sealed class Maybe<A>: K1<Maybe.T, A> {
   /** Same as [orElse]. */
   infix fun mplus(m: K1<T, A>): Maybe<A> = monadPlus.mplus(this, m)
   private val monadPlus = object: MaybeMonadPlus {}
-
-  override fun equals(other: Any?): Boolean {
-    return when {
-      this is Just && other is Maybe.Just<*> -> this.value == other.value
-      this is None && other is Maybe.None<*> -> true
-      else -> false
-    }
-  }
 }

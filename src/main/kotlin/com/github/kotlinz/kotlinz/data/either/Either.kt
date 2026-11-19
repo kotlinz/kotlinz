@@ -25,9 +25,9 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
   class T
 
   /** The left (failure) case holding [value]. */
-  class Left<L, R>(val value: L): Either<L, R>()
+  data class Left<L, R>(val value: L): Either<L, R>()
   /** The right (success) case holding [value]. */
-  class Right<L, R>(val value: R): Either<L, R>()
+  data class Right<L, R>(val value: R): Either<L, R>()
 
   companion object {
     /** Downcasts a higher-kinded representation back to [Either]. */
@@ -109,12 +109,4 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
   /** Maps the [Right] value with [g]. */
   infix fun <S> second(g: (R) -> S): Either<L, S> = bifunctor.second(g, this)
   private val bifunctor = object: EitherBifunctor {}
-
-  override fun equals(other: Any?): Boolean {
-    return when {
-      this is Left && other is Left<*, *> -> this.value == other.value
-      this is Right && other is Right<*, *> -> this.value == other.value
-      else -> false
-    }
-  }
 }

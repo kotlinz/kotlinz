@@ -75,4 +75,9 @@ class WriterT<F, W: Monoid<*, W>, A>(val monad: Monad<F>, val type: Class<W>, va
     infix fun censor(f: (W) -> W): WriterT<F, W, A> = narrow(instance().censor(f, this))
 
     private fun instance() = instance(monad, type)
+
+    /** Two transformers are equal when their underlying `F<(value, log)>` values are equal. */
+    override fun equals(other: Any?): Boolean = other is WriterT<*, *, *> && run == other.run
+    override fun hashCode(): Int = run.hashCode()
+    override fun toString(): String = "WriterT(run=$run)"
 }
