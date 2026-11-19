@@ -33,12 +33,15 @@ fun <T, A> Monad<T>.fxReplay(block: suspend MonadScope<T>.() -> A): K1<T, A>
 | Companion helper | Implementation | Extra arguments |
 |---|---|---|
 | `Identity.fx`, `Maybe.fx`, `Either.fx`, `Try.fx`, `Eval.fx`, `IO.fx`, `Function0.fx` | `fx` | |
-| `Reader.fx`, `State.fx`, `Function1.fx` | `fx` | |
+| `Reader.fx`, `State.fx`, `Function1.fx`, `IndexedState.fx` (state type unchanged) | `fx` | |
+| `Resource.fx`, `Parser.fx`, `Gen.fx` | `fx` | |
 | `Writer.fx`, `Tuple2.fx`, `RWS.fx` | `fx` | monoid class |
 | `Ior.fx` | `fx` | semigroup class |
-| `MaybeT.fx`, `EitherT.fx`, `ReaderT.fx`, `StateT.fx` | `fx` | inner monad |
-| `WriterT.fx` | `fx` | inner monad and monoid class |
-| `ListK.fx`, `NonEmptyList.fx`, `Free.fx` | `fxReplay` | |
+| `MaybeT.fx`, `EitherT.fx`, `ReaderT.fx`, `StateT.fx`, `IdentityT.fx`, `ContT.fx` | `fx` | inner monad |
+| `WriterT.fx`, `AccumT.fx`, `RWST.fx`, `IorT.fx` | `fx` | inner monad and monoid / semigroup class |
+| `ListK.fx`, `NonEmptyList.fx`, `LazyList.fx`, `Chain.fx`, `Tree.fx`, `Free.fx`, `Freer.fx`, `Select.fx`, `Logic.fx` | `fxReplay` | |
+| `ListT.fx`, `LogicT.fx`, `SelectT.fx` | `fxReplay` | inner monad |
+| `FreeT.fx` | `fxReplay` | functor and inner monad |
 
 Any other monad can use the extension directly on an instance, for example `Cont` or `Codensity`, which have no
 companion helper:
@@ -107,8 +110,9 @@ check(io.unsafeRun() == 20)
 ## Multi-shot monads: `fxReplay`
 
 A Kotlin coroutine continuation can be resumed only once, so `fx` is correct only for monads whose `bind` calls the
-continuation **at most once** per run. `ListK` and `NonEmptyList` call it once per element, and `Free` may be
-interpreted into such a monad. For these, `fxReplay` re-runs the block from the start for every bound value,
+continuation **at most once** per run. `ListK`, `NonEmptyList`, `LazyList`, `Chain` and `Tree` call it once per
+element, `Select` / `SelectT` and the backtracking `ListT` / `LogicT` call it several times, and `Free`, `Freer` and
+`FreeT` may be interpreted into such a monad. For these, `fxReplay` re-runs the block from the start for every bound value,
 replaying previously bound values from a history:
 
 ```kotlin
