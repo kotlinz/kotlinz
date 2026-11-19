@@ -58,8 +58,11 @@ function sidebar(): DefaultTheme.Sidebar {
       link: '/type-classes/',
       items: [
         { text: 'Functor, Applicative, Monad', link: '/type-classes/functor-applicative-monad' },
+        { text: 'Selective', link: '/type-classes/selective' },
         { text: 'Foldable and Traversable', link: '/type-classes/foldable-traversable' },
+        { text: 'Align and Filterable', link: '/type-classes/align-filterable' },
         { text: 'Errors and MTL', link: '/type-classes/mtl' },
+        { text: 'Eq, Order, Show, Hash', link: '/type-classes/eq-order-show-hash' },
         { text: 'Contravariant Functors', link: '/type-classes/contravariant' },
         { text: 'Bifunctor, Profunctor, Arrow', link: '/type-classes/bifunctor-profunctor-arrow' },
         { text: 'Distributive, Representable', link: '/type-classes/distributive-representable' },
@@ -69,6 +72,8 @@ function sidebar(): DefaultTheme.Sidebar {
       text: 'Data Types and Effects',
       items: [
         { text: 'Data Types', link: '/data-types' },
+        { text: 'Data Structures', link: '/data-structures' },
+        { text: 'Effects', link: '/effects' },
         { text: 'Monad Comprehension (fx)', link: '/fx' },
         { text: 'Monad Transformers', link: '/transformers' },
         { text: 'Monoids and Algebra', link: '/monoids' },
@@ -77,7 +82,9 @@ function sidebar(): DefaultTheme.Sidebar {
     {
       text: 'Advanced',
       items: [
+        { text: 'Optics', link: '/optics' },
         { text: 'Comonads', link: '/comonads' },
+        { text: 'Automata and Folds', link: '/automata' },
         { text: 'Category Theory', link: '/category-theory' },
       ],
     },

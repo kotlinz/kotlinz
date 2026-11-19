@@ -11,10 +11,15 @@ category-theory constructs, with no dependencies.**
 
 - Higher-kinded types via the lightweight `K1<F, A>` encoding, so `Functor`, `Monad`, `Traversable`, ... are
   ordinary interfaces you can write generic code against.
-- A broad type-class hierarchy: from `Functor` / `Applicative` / `Monad` and `Foldable` / `Traversable` to
-  MTL-style classes, `Comonad`, `Profunctor`, `Arrow`, `Decidable`, `Representable` and `Adjunction`.
-- Familiar data types (`Maybe`, `Either`, `Try`, `Validated`, `IO`, `State`, `Reader`, `Writer`, ...), monad
-  transformers, comonads, `Free` / `FreeAp` / `Cofree`, Kan extensions and recursion schemes.
+- A broad type-class hierarchy: from `Functor` / `Applicative` / `Selective` / `Monad` and `Foldable` /
+  `Traversable` to `Filterable`, `Align`, MTL-style classes, `Comonad`, `Profunctor`, `Arrow`, `Decidable`,
+  `Representable` and `Adjunction`, plus value-level `Eq` / `Order` / `Show` / `Hash`.
+- Familiar data types (`Maybe`, `Either`, `Try`, `Validated`, `IO`, `State`, `Reader`, `Writer`, ...), persistent
+  data structures (`LazyList`, `Chain`, `Tree`, `NonEmptyMap`, `ListZipper`, ...), effects (`Resource`, `Ref`,
+  `Parser`, `Gen`, `Logic`) and 15 monad transformers.
+- Profunctor optics (`Iso`, `Lens`, `Prism`, `Optional`, `Traversal`, `Getter`, `Fold`, `Setter`).
+- Comonads and comonad transformers, `Free` / `FreeAp` / `FreeT` / `Freer` / `Cofree`, Kan extensions, Moore and
+  Mealy machines, and recursion schemes over `Fix`, `Mu` and `Nu`.
 - Do-notation (`fx`) built on Kotlin coroutines.
 - Type-class instances are checked against their laws in the test suite.
 
@@ -186,6 +191,38 @@ check(IO.narrow(url.run).unsafeRun() == Either.Right<String, String>("localhost:
 check(IO.narrow(readPort("x").run).unsafeRun() == Either.Left<String, Int>("invalid port: x"))
 ```
 
+### Optics
+
+```kotlin
+import com.github.kotlinz.kotlinz.optics.Lens
+import com.github.kotlinz.kotlinz.optics.Traversal
+import com.github.kotlinz.kotlinz.optics.andThen
+import com.github.kotlinz.kotlinz.optics.get
+import com.github.kotlinz.kotlinz.optics.getAll
+import com.github.kotlinz.kotlinz.optics.list
+import com.github.kotlinz.kotlinz.optics.modify
+import com.github.kotlinz.kotlinz.optics.set
+
+data class Address(val city: String)
+data class Employee(val name: String, val address: Address)
+data class Company(val employees: List<Employee>)
+
+val address = Lens({ e: Employee -> e.address }, { e: Employee, a: Address -> e.copy(address = a) })
+val city = Lens({ a: Address -> a.city }, { a: Address, c: String -> a.copy(city = c) })
+val employees = Lens({ c: Company -> c.employees }, { c: Company, es: List<Employee> -> c.copy(employees = es) })
+val allCities = employees andThen Traversal.list() andThen address andThen city
+
+val ann = Employee("Ann", Address("Tokyo"))
+val company = Company(listOf(ann, Employee("Bob", Address("Osaka"))))
+
+check((address andThen city).get(ann) == "Tokyo")
+check((address andThen city).set("Kyoto")(ann) == Employee("Ann", Address("Kyoto")))
+check(allCities.getAll(company) == listOf("Tokyo", "Osaka"))
+check(allCities.modify { it.uppercase() }(company).employees.map { it.address.city } == listOf("TOKYO", "OSAKA"))
+```
+
+See [Optics](docs/optics.md) for prisms, optionals, folds, setters and how the profunctor encoding works.
+
 ### Free monads
 
 ```kotlin
@@ -225,34 +262,42 @@ check(State.narrow(program.foldMap(toState, object : StateMonadRec<Int> {})).run
 
 | Category | What is included |
 |---|---|
-| Functor family | `Invariant`, `Functor`, `Pointed`, `Applicative`, `Monad`, `Alternative`, `MonadPlus`, `MonadZip`, `MonadRec`, `Copointed`, `Comonad` |
-| Folding | `Foldable`, `Traversable`, `Distributive`, `Representable` |
-| Effects (MTL) | `ApplicativeError`, `MonadError`, `MonadReader`, `MonadState`, `MonadWriter` |
-| Two-parameter | `Bifunctor`, `Profunctor`, `Strong`, `Choice`, `Category`, `Arrow`, `ArrowChoice`, `ArrowApply`, `ArrowLoop` |
+| Functor family | `Invariant`, `Functor`, `Pointed`, `Apply`, `Applicative`, `Selective`, `FlatMap`, `Monad`, `Alternative`, `MonadPlus`, `MonadZip`, `MonadRec`, `MonadFix`, `MonadSelective`, `IxFunctor` / `IxApplicative` / `IxMonad`, `Copointed`, `Comonad` |
+| Folding | `Foldable`, `Foldable1`, `Traversable`, `Traversable1`, `Filterable`, `Witherable`, `Semialign`, `Align`, `Zip`, `Distributive`, `Representable` |
+| Effects (MTL) | `ApplicativeError`, `MonadError`, `MonadReader`, `MonadState`, `MonadWriter`, `MonadCont`, `MonadIO`, `MonadLogic`, `MonadTrans`, `MFunctor`, `ComonadTrans`, `ComonadStore`, `ComonadEnv`, `ComonadTraced` |
+| Two-parameter | `Bifunctor`, `Bifoldable`, `Bitraversable`, `Profunctor`, `Strong`, `Choice`, `Closed`, `Traversing`, `Cochoice`, `Costrong`, `Category`, `Arrow`, `ArrowChoice`, `ArrowApply`, `ArrowLoop` |
 | Contravariant | `Contravariant`, `Divisible`, `Decidable` |
-| Algebra | `Semigroup`, `Monoid`, `Group`, `Band`, `Semiring`, `Lattice`, `BoundedLattice`, 15 monoid instances, `MonoidOf`, `SemigroupOf` |
-| Data types | `Identity`, `Maybe`, `Either`, `Try`, `Validated`, `Ior`, `Eval`, `IO`, `Reader`, `Writer`, `State`, `RWS`, `Cont`, `ListK`, `NonEmptyList`, `Tuple2`, `Twin`, `Const`, `Function0`, `Function1`, `Kleisli`, `Predicate`, `Comparison`, `Equivalence`, `Op`, `Compose`, `Product`, `Coproduct` |
-| Transformers | `MaybeT`, `EitherT`, `ReaderT`, `StateT`, `WriterT` |
-| Comonads | `Store`, `Env`, `Traced`, `Cofree`, `Density`, `Day` |
-| Category theory | `NaturalTransformation`, `Adjunction`, `Yoneda`, `Coyoneda`, `Codensity`, `Ran`, `Lan`, `Day`, `Free`, `FreeAp`, `Fix` with `cata` / `ana` / `hylo` / `para` / `apo` |
+| Value classes | `Eq`, `Order`, `Show`, `Hash` |
+| Algebra | `Semigroup`, `Monoid`, `CommutativeMonoid`, `Group`, `Band`, `Monus`, `Semiring`, `Ring`, `Field`, `Lattice`, `BoundedLattice`, 18 monoid instances, `MonoidOf`, `SemigroupOf` |
+| Data types | `Identity`, `Maybe`, `Either`, `Try`, `Validated`, `Ior`, `Eval`, `IO`, `Reader`, `Writer`, `State`, `IndexedState`, `RWS`, `Cont`, `Select`, `ListK`, `NonEmptyList`, `Tuple2`, `Twin`, `Const`, `Function0`, `Function1`, `Kleisli`, `Cokleisli`, `Predicate`, `Comparison`, `Equivalence`, `Op`, `Compose`, `Product`, `Coproduct` |
+| Data structures | `LazyList`, `Chain`, `Tree`, `NonEmptySet`, `NonEmptyMap`, `ListZipper` |
+| Effects | `Resource`, `Ref`, `Parser`, `Gen`, `Logic` / `LogicT` |
+| Automata and folds | `Moore`, `Mealy`, `Fold` |
+| Optics | `Iso`, `Lens`, `Prism`, `Optional`, `Traversal`, `Getter`, `Fold`, `Setter` |
+| Transformers | `MaybeT`, `EitherT`, `IorT`, `IdentityT`, `ReaderT`, `WriterT`, `StateT`, `IndexedStateT`, `RWST`, `AccumT`, `ContT`, `SelectT`, `ListT`, `LogicT`, `FreeT` |
+| Comonads | `Store`, `Env`, `Traced`, `Cofree`, `Density`, `Day`, `StoreT`, `EnvT`, `TracedT`, `CofreeT` |
+| Profunctors | `Star`, `Costar`, `Forget`, `Tagged`, `Procompose`, `Cayley`, `Tambara` |
+| Category theory | `NaturalTransformation`, `Adjunction`, `Yoneda`, `Coyoneda`, `Codensity`, `Ran`, `Lan`, `Day`, `Free`, `FreeAp`, `Freer`, `FreeSelective`, `FreeCategory`, `FreeArrow`, `Fix` / `Mu` / `Nu` with `cata` / `ana` / `hylo` / `para` / `apo` / `histo` / `futu` and more |
 
 Core data types × type classes (✓ = instance provided; * = takes a `Monoid` / `Semigroup` class):
 
 | | Functor | Applicative | Monad | Traversable | Comonad | Other |
 |---|---|---|---|---|---|---|
-| `Identity` | ✓ | ✓ | ✓ | ✓ | ✓ | `MonadZip`, `MonadRec`, `Representable` |
-| `Maybe` | ✓ | ✓ | ✓ | ✓ | | `MonadPlus` |
-| `Either` | ✓ | ✓ | ✓ | ✓ | | `MonadError`, `Bifunctor` |
-| `Try` | ✓ | ✓ | ✓ | ✓ | | `MonadError` |
-| `Validated` * | ✓ | ✓ | | | | error accumulation |
-| `Ior` * | ✓ | ✓ | ✓ | | | `Bifunctor` |
-| `Eval` | ✓ | ✓ | ✓ | | ✓ | `MonadRec` |
-| `IO` | ✓ | ✓ | ✓ | | | `MonadError` |
-| `Reader` | ✓ | ✓ | ✓ | | | `MonadReader`, `Representable` |
+| `Identity` | ✓ | ✓ | ✓ | ✓ | ✓ | `MonadZip`, `MonadRec`, `MonadFix`, `Traversable1`, `Representable`, `Eq` / `Order` / `Show` / `Hash` |
+| `Maybe` | ✓ | ✓ | ✓ | ✓ | | `MonadPlus`, `MonadFix`, `Selective`, `Witherable`, `Align`, `Zip`, `Eq` / `Order` / `Show` / `Hash` |
+| `Either` | ✓ | ✓ | ✓ | ✓ | | `MonadError`, `Selective`, `Witherable` *, `Bitraversable`, `Eq` / `Order` / `Show` / `Hash` |
+| `Try` | ✓ | ✓ | ✓ | ✓ | | `MonadError`, `Eq` / `Show` / `Hash` |
+| `Validated` * | ✓ | ✓ | | | | error accumulation, `Selective`, `Bitraversable`, `Eq` / `Order` / `Show` / `Hash` |
+| `Ior` * | ✓ | ✓ | ✓ | | | `Bitraversable`, `Eq` / `Order` / `Show` / `Hash` |
+| `Eval` | ✓ | ✓ | ✓ | | ✓ | `MonadRec`, `MonadFix` |
+| `IO` | ✓ | ✓ | ✓ | | | `MonadError`, `MonadIO` |
+| `Reader` | ✓ | ✓ | ✓ | | | `MonadReader`, `MonadFix`, `Representable` |
 | `Writer` * | ✓ | ✓ | ✓ | | | `MonadWriter`, `Bifunctor` |
 | `State` | ✓ | ✓ | ✓ | | | `MonadState`, `MonadRec` |
-| `ListK` | ✓ | ✓ | ✓ | ✓ | | `MonadPlus`, `MonadZip` |
-| `NonEmptyList` | ✓ | ✓ | ✓ | ✓ | ✓ | |
+| `ListK` | ✓ | ✓ | ✓ | ✓ | | `MonadPlus`, `MonadZip`, `Witherable`, `Align`, `Zip`, `Eq` / `Order` / `Show` / `Hash` |
+| `NonEmptyList` | ✓ | ✓ | ✓ | ✓ | ✓ | `Traversable1`, `Zip`, `Eq` / `Order` / `Show` / `Hash` |
+| `LazyList`, `Chain` | ✓ | ✓ | ✓ | ✓ | | `Witherable`, `Align`, `Zip` |
+| `Tree` | ✓ | ✓ | ✓ | ✓ | ✓ | `Traversable1`, `Zip` |
 
 The complete matrix is in [Type classes](docs/type-classes/README.md#coverage).
 
@@ -265,10 +310,14 @@ reference in one place.
   - [Higher-kinded types and conventions](docs/hkt.md)
   - [Type classes](docs/type-classes/README.md)
   - [Data types](docs/data-types.md)
+  - [Data structures](docs/data-structures.md)
+  - [Effects](docs/effects.md)
   - [Monad comprehension (`fx`)](docs/fx.md)
   - [Monad transformers](docs/transformers.md)
   - [Monoids and algebraic structures](docs/monoids.md)
+  - [Optics](docs/optics.md)
   - [Comonads](docs/comonads.md)
+  - [Automata and folds](docs/automata.md)
   - [Category theory](docs/category-theory.md)
 - **API reference**: [kotlinz.github.io/kotlinz/api](https://kotlinz.github.io/kotlinz/api/)
 

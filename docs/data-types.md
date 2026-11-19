@@ -10,10 +10,18 @@ have their own guides: [Monad transformers](transformers.md), [Comonads](comonad
 |---|---|
 | [Optional values and errors](#optional-values-and-errors) | `Identity`, `Maybe`, `Either`, `Try`, `Validated`, `Ior` |
 | [Laziness and effects](#laziness-and-effects) | `Eval`, `IO`, `Function0` |
-| [Environment, output and state](#environment-output-and-state) | `Reader`, `Writer`, `State`, `RWS`, `Cont` |
+| [Environment, output and state](#environment-output-and-state) | `Reader`, `Writer`, `State`, `IndexedState`, `RWS`, `Cont`, `Select` |
 | [Collections and products](#collections-and-products) | `ListK`, `NonEmptyList`, `Tuple2`, `Twin`, `Const` |
 | [Functions](#functions) | `Function1`, `Kleisli`, `Predicate`, `Comparison`, `Equivalence`, `Op` |
 | [Functor combinators](#functor-combinators) | `Compose`, `Product`, `Coproduct` |
+
+More data types have their own pages: [Data structures](data-structures.md) (`LazyList`, `Chain`, `Tree`,
+`NonEmptySet`, `NonEmptyMap`, `ListZipper`), [Effects](effects.md) (`Resource`, `Ref`, `Parser`, `Gen`, `Logic`),
+[Automata and folds](automata.md) (`Moore`, `Mealy`, `Fold`, `Cokleisli`) and [Optics](optics.md).
+
+Most types in this page also provide [`Eq`, `Order`, `Show` and `Hash`](type-classes/eq-order-show-hash.md)
+instances through companion factories such as `Maybe.eq(Int.eq)`, and implement `equals`, `hashCode` and
+`toString` in Kotlin data-class style (`Just(value=1)`, `Left(value=e)`).
 
 Unless noted otherwise, every monad below supports `fmap` / `ap` / `bind` as members and `pure`, `join`, `fx`,
 `liftA*` and `liftM*` on its companion.
@@ -23,7 +31,8 @@ Unless noted otherwise, every monad below supports `fmap` / `ap` / `bind` as mem
 ### Identity
 
 The trivial wrapper. Useful as the base monad of a transformer and as the simplest instance of almost every class
-(`Monad`, `Traversable`, `Comonad`, `MonadZip`, `MonadRec`, `Distributive`, `Representable`).
+(`Monad`, `Traversable`, `Traversable1`, `Comonad`, `MonadZip`, `MonadRec`, `MonadFix`, `Distributive`,
+`Representable`).
 
 ```kotlin
 import com.github.kotlinz.kotlinz.data.identity.Identity
@@ -34,7 +43,9 @@ check(Identity(1).extract() == 1)
 
 ### Maybe
 
-`Maybe.Just(value)` or `Maybe.None()`. `Monad`, `Traversable`, `Alternative`, `MonadPlus`.
+`Maybe.Just(value)` or `Maybe.None()`. `Monad`, `Traversable`, `Alternative`, `MonadPlus`, `MonadFix`,
+`Selective`, `Filterable` / `Witherable` and `Align` / `Zip`, with `filter`, `mapFilter`, `zip` and `align` as
+members.
 
 ```kotlin
 import com.github.kotlinz.kotlinz.data.maybe.Maybe
@@ -44,14 +55,15 @@ fun lookup(key: String): Maybe<Int> = mapOf("a" to 1)[key]?.let { Maybe.Just(it)
 check((lookup("a") fmap { it + 1 }).getOrElse(0) == 2)
 check(lookup("b").getOrElse(0) == 0)
 check((lookup("b") orElse lookup("a")) == Maybe.Just(1))
+check((lookup("a") filter { it > 1 }) == Maybe.None<Int>())
+check((lookup("a") zip Maybe.Just("x")) == Maybe.Just(Pair(1, "x")))
+check(lookup("a").toString() == "Just(value=1)")
 ```
-
-`Maybe` (like `Either` and `Try`) has value-based `equals` but no `toString`/`hashCode` override, so it prints as an
-object reference.
 
 ### Either
 
-`Either.Left(error)` or `Either.Right(value)`, right-biased. `Monad`, `Traversable`, `MonadError<L>`, `Bifunctor`.
+`Either.Left(error)` or `Either.Right(value)`, right-biased. `Monad`, `Traversable`, `MonadError<L>`, `Selective`,
+`Filterable` / `Witherable` (with a `Monoid` left side), and `Bifunctor` / `Bifoldable` / `Bitraversable`.
 Type arguments often need to be given explicitly because Kotlin cannot infer the unused side.
 
 ```kotlin
@@ -84,7 +96,8 @@ check(Try.fx<Int> { Try.pure(1).bind() / 0 } is Try.Failure)
 ### Validated
 
 `Validated.Valid(value)` or `Validated.Invalid(error)`. An `Applicative` (not a `Monad`) that **accumulates**
-errors with a `Semigroup<E>`, passed as a `Class<E>`. Convert from / to `Either` with `toValidated()` /
+errors with a `Semigroup<E>`, passed as a `Class<E>`. It is also `Selective`, `Bifunctor`, `Bifoldable` and
+`Bitraversable`. Convert from / to `Either` with `toValidated()` /
 `toEither()`.
 
 ```kotlin
@@ -112,7 +125,8 @@ check(Either.Left<String, Int>("e").toValidated() == Validated.invalid<String, I
 
 ### Ior
 
-Inclusive-or: `Ior.Left(a)`, `Ior.Right(b)` or `Ior.Both(a, b)`. Useful for "succeeded with warnings". Its
+Inclusive-or: `Ior.Left(a)`, `Ior.Right(b)` or `Ior.Both(a, b)`. Useful for "succeeded with warnings". It is a
+`Bifunctor`, `Bifoldable` and `Bitraversable`, and the left side of `Semialign.align`. Its
 `Monad` accumulates the left side with a `Semigroup`, so `ap` / `bind` are extension functions that take the
 semigroup class.
 
@@ -134,7 +148,7 @@ check(Ior.left<ListMonoid, Int>(ListMonoid(listOf("fatal"))).bind(warnings) { st
 ### Eval
 
 A memoized lazy value. `Eval.now(v)` is already evaluated, `Eval.later { ... }` runs the thunk once on first access
-of `value`. `Monad`, `Comonad`, `MonadRec`. Note that `bind` itself is not trampolined, so very deep `bind` chains
+of `value`. `Monad`, `Comonad`, `MonadRec`, `MonadFix`. Note that `bind` itself is not trampolined, so very deep `bind` chains
 can still overflow the stack; use `MonadRec.tailRecM` (or `Free` interpreted into `Eval`) for unbounded loops.
 
 ```kotlin
@@ -153,7 +167,8 @@ check(evaluations == 1)
 ### IO
 
 A suspended side effect. Nothing runs until `unsafeRun()`, and running twice runs the effect twice.
-`Monad`, `MonadError<Throwable>`. Like `Eval`, `bind` is not trampolined.
+`Monad`, `MonadError<Throwable>`, `MonadIO`. Like `Eval`, `bind` is not trampolined. Resource safety (`Resource`,
+`bracket`) and mutable references (`Ref`) are covered in [Effects](effects.md).
 
 ```kotlin
 import com.github.kotlinz.kotlinz.data.either.Either
@@ -174,7 +189,7 @@ check(IO.raiseError<Int>(IllegalStateException("x")).attempt().unsafeRun() is Ei
 ### Function0
 
 A wrapped `() -> A` that is re-evaluated every time it is invoked (no memoization, unlike `Eval`). `Monad`,
-`Comonad`.
+`MonadFix`, `Comonad`.
 
 ```kotlin
 import com.github.kotlinz.kotlinz.data.function.Function0
@@ -195,7 +210,7 @@ These types are covered in detail, together with their type classes, in
 
 ### Reader
 
-A function `(R) -> A` that reads a shared environment. `Monad`, `MonadReader<R>`, `Distributive`,
+A function `(R) -> A` that reads a shared environment. `Monad`, `MonadReader<R>`, `MonadFix`, `Distributive`,
 `Representable<R>`. A top-level `ask<R>()` is also available.
 
 ```kotlin
@@ -235,6 +250,21 @@ val program = push(1) bind { push(2) } bind { pop }
 check(program.run(emptyList()) == Pair(2, listOf(1)))
 ```
 
+### IndexedState
+
+`IndexedState<I, O, A>` is a state computation whose state type changes from `I` to `O`, so protocol steps can be
+tracked in the type and out-of-order steps fail to compile. It is an `IxMonad` (see
+[indexed monads](type-classes/functor-applicative-monad.md)), and a plain `Monad` when `I == O`. `toState()`
+converts a state-preserving computation to `State`; `IndexedStateT` is the transformer version.
+
+```kotlin
+import com.github.kotlinz.kotlinz.data.indexedstate.IndexedState
+
+val describe = IndexedState.get<Int>() bind { n -> IndexedState.put<Int, String>("n=$n") fmap { n * 2 } }
+check(describe.run(21) == Pair(42, "n=21"))
+check(IndexedState.modify<String, Int> { it.length }.exec("four") == 4)
+```
+
 ### RWS
 
 Reader + Writer + State in one type: a function `(R, S) -> Triple<A, S, W>`. See
@@ -242,8 +272,8 @@ Reader + Writer + State in one type: a function `(R, S) -> Triple<A, S, W>`. See
 
 ### Cont
 
-Continuation-passing style: `Cont<R, A>` wraps `((A) -> R) -> R`. `Monad`, plus top-level `callCC` for early exit
-and `eval()` for `Cont<A, A>`. `Cont` has no `fx` helper on its companion.
+Continuation-passing style: `Cont<R, A>` wraps `((A) -> R) -> R`. `Monad` and `MonadCont`, plus top-level `callCC`
+for early exit and `eval()` for `Cont<A, A>`. Its transformer version is `ContT` ([Monad transformers](transformers.md)). `Cont` has no `fx` helper on its companion.
 
 ```kotlin
 import com.github.kotlinz.kotlinz.data.cont.Cont
@@ -259,12 +289,28 @@ check(safeDivide(10, 2).run { "result $it" } == "result 5")
 check(safeDivide(10, 0).run { "result $it" } == "result 0")
 ```
 
+### Select
+
+The selection monad `Select<R, A>` wraps `((A) -> R) -> A`: it picks an `A` given a way to score each candidate
+by an outcome `R`. Sequencing selections lets each choice see how the rest of the computation scores it, which
+solves greedy optimisation and game-playing problems. `Monad`, with `fx` (replayed, like `ListK`). `SelectT`
+is the transformer version and `toSelectT()` converts.
+
+```kotlin
+import com.github.kotlinz.kotlinz.data.select.Select
+
+fun argmax(xs: List<Int>) = Select<Int, Int> { score -> xs.maxBy(score) }
+
+val pair = argmax(listOf(1, 2, 3)) bind { x -> argmax(listOf(1, 2, 3)) fmap { y -> Pair(x, y) } }
+check(pair.run { (x, y) -> x - y } == Pair(3, 1))
+```
+
 ## Collections and products
 
 ### ListK
 
 A wrapper around `List<A>` (`ListK(list)`, `listKOf(...)`, `list.toListK()`; the list is in `.value`). `Monad`,
-`Traversable`, `Alternative`, `MonadPlus`, `MonadZip`. Its `fx` uses `fxReplay` (see [fx](fx.md)).
+`Traversable`, `Alternative`, `MonadPlus`, `MonadZip`, `Filterable` / `Witherable` and `Align` / `Zip`. Its `fx` uses `fxReplay` (see [fx](fx.md)).
 
 ```kotlin
 import com.github.kotlinz.kotlinz.data.listk.listKOf
@@ -277,8 +323,10 @@ check(listKOf(3, 1, 2).value.sorted() == listOf(1, 2, 3))
 ### NonEmptyList
 
 A list with at least one element (`NonEmptyList(head, tail)`, `nonEmptyListOf(head, ...)`,
-`NonEmptyList.fromList(list)` returning `null` for an empty list). `Monad`, `Traversable`, `Comonad`. It also has
-`plus`, but no `Semigroup` instance class.
+`NonEmptyList.fromList(list)` returning `null` for an empty list). `Monad`, `Traversable`, `Comonad`,
+`Foldable1` / `Traversable1` (`reduceLeft`, `reduceMap` without an empty case) and `Semialign` / `Zip`. It also has
+`plus`, but no `Semigroup` instance class. Its relatives `NonEmptySet` and `NonEmptyMap` are in
+[Data structures](data-structures.md).
 
 ```kotlin
 import com.github.kotlinz.kotlinz.data.nonemptylist.NonEmptyList
@@ -293,8 +341,8 @@ check((nel fmap { it * 10 }) == nonEmptyListOf(10, 20, 30))
 
 ### Tuple2
 
-A pair `Tuple2(first, second)`. It is a `Comonad` and `Bifunctor`, and a `Monad` in `second` when `first` is a
-monoid (the "writer" monad). As with `Ior`, `ap` / `bind` are extension functions taking the monoid class. Convert
+A pair `Tuple2(first, second)`. It is a `Comonad`, `Foldable1` / `Traversable1` and `Bifunctor` / `Bifoldable` /
+`Bitraversable`, and a `Monad` in `second` when `first` is a monoid (the "writer" monad). As with `Ior`, `ap` / `bind` are extension functions taking the monoid class. Convert
 with `toPair()` / `Pair.toTuple2()`.
 
 ```kotlin
@@ -323,7 +371,7 @@ check(Twin(1, 2).swap() == Twin(2, 1))
 ### Const
 
 `Const<C, A>` holds a `C` and ignores `A` (a phantom type). It is a `Functor`, a `Contravariant`, and an
-`Applicative` when `C` is a monoid, in which case `ap` combines the constants. This makes `traverse` with `Const`
+`Applicative` (and `Selective`) when `C` is a monoid, in which case `ap` combines the constants. This makes `traverse` with `Const`
 a `foldMap`, and it powers `FreeAp.analyze`.
 
 ```kotlin
@@ -341,7 +389,8 @@ check((Const<String, Int>("kept") fmap { it + 1 }).value == "kept")
 
 ### Function1
 
-A wrapped `(A) -> B`, invokable with `f(a)`. It is the reader `Monad` in its output, a `Profunctor`, and a
+A wrapped `(A) -> B`, invokable with `f(a)`. It is the reader `Monad` in its output, a `Profunctor` (also
+`Strong`, `Choice`, `Closed`, `Traversing` and `Cochoice`), and a
 `Category` / `Arrow` (encoded with a phantom `Unit`, see [Higher-kinded types](hkt.md)). See
 [Bifunctor, Profunctor and Arrow](type-classes/bifunctor-profunctor-arrow.md) for the arrow combinators.
 
@@ -354,7 +403,9 @@ check(plusEnv(3) == 12)
 
 ### Kleisli
 
-`Kleisli<F, A, B>` wraps `(A) -> K1<F, B>` plus a `Monad<F>`. See
+`Kleisli<F, A, B>` wraps `(A) -> K1<F, B>` plus a `Monad<F>`. It is a `Category`, `Arrow`, `ArrowChoice`,
+`ArrowApply`, and `ArrowLoop` when the monad has a `MonadFix`. Its dual, `Cokleisli`, is covered in
+[Automata and folds](automata.md). See
 [Kleisli arrows](type-classes/bifunctor-profunctor-arrow.md#kleisli-arrows).
 
 ### Predicate, Comparison, Equivalence, Op

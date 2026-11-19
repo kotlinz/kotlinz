@@ -181,6 +181,40 @@ check(max == MaxMonoid(Maybe.Just(9)))
 If you need a monoid as a plain value instead of a class, see `MonoidOf` / `SemigroupOf` in the
 [monoids guide](monoids.md).
 
+## Instance values: `Eq`, `Order`, `Show`, `Hash`
+
+`Eq`, `Order`, `Show` and `Hash` take a third approach. They are ordinary interfaces over a proper type (`Eq<A>`,
+not `Eq<T>` over a tag), and an instance is a **value** that you pass explicitly, much like a `Comparator`:
+
+- primitive instances are companion extension properties: `Int.eq`, `String.order`, `Long.hash`, `Boolean.show`;
+- data types derive instances from their element instances with companion factories: `Maybe.eq(Int.eq)`,
+  `Either.order(String.order, Int.order)`, `ListK.show(Int.show)`;
+- `Eq.by`, `Order.by`, `Show.by` and `Hash.by` build ad-hoc instances, and `Eq.fromEquals()`,
+  `Order.fromComparable()`, `Show.fromToString()`, `Hash.fromHashCode()` delegate to the JVM methods.
+
+```kotlin
+import com.github.kotlinz.kotlinz.data.maybe.Maybe
+import com.github.kotlinz.kotlinz.data.maybe.eq
+import com.github.kotlinz.kotlinz.data.maybe.order
+import com.github.kotlinz.kotlinz.type.eq.Eq
+import com.github.kotlinz.kotlinz.type.eq.eq
+import com.github.kotlinz.kotlinz.type.order.order
+
+val caseInsensitive = Eq.by<String> { a, b -> a.equals(b, ignoreCase = true) }
+val maybeOrder = Maybe.order(Int.order)
+
+check(Maybe.eq(Int.eq).eqv(Maybe.Just(1), Maybe.Just(1)))
+check(Maybe.eq(caseInsensitive).eqv(Maybe.Just("Kotlin"), Maybe.Just("KOTLIN")))
+check(maybeOrder.lt(Maybe.None(), Maybe.Just(0)))
+check(listOf(Maybe.Just(2), Maybe.None(), Maybe.Just(1)).sortedWith(maybeOrder.toComparator()) ==
+  listOf(Maybe.None(), Maybe.Just(1), Maybe.Just(2)))
+```
+
+Compare this with `Semigroup` / `Monoid`, where the *values themselves* are wrapper objects (`SumMonoid(3)`)
+and the instance is found through a `Class<M>`. The instance-value style needs no reflection and composes freely,
+but every call site has to pass the instance. See [Eq, Order, Show and Hash](type-classes/eq-order-show-hash.md)
+for the full list of instances.
+
 ## Known limitations of the encoding
 
 - `narrow` is an unchecked cast. It is safe only as long as each tag has exactly one implementing class.
