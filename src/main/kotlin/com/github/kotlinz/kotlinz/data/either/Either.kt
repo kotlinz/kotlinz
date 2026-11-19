@@ -25,9 +25,9 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
   class T
 
   /** The left (failure) case holding [value]. */
-  class Left<L, R>(val value: L): Either<L, R>()
+  data class Left<L, R>(val value: L): Either<L, R>()
   /** The right (success) case holding [value]. */
-  class Right<L, R>(val value: R): Either<L, R>()
+  data class Right<L, R>(val value: R): Either<L, R>()
 
   companion object {
     /** Downcasts a higher-kinded representation back to [Either]. */
