@@ -8,13 +8,14 @@ import com.github.kotlinz.kotlinz.data.function.Function1Traversing
 import com.github.kotlinz.kotlinz.data.maybe.Maybe
 import com.github.kotlinz.kotlinz.type.profunctor.Choice
 import com.github.kotlinz.kotlinz.type.profunctor.Strong
+import com.github.kotlinz.kotlinz.type.profunctor.Traversing
 
 /**
  * A focus on at most one `A` inside an `S` (an affine traversal), e.g. a lens followed by a prism.
  *
  * Profunctor encoding: an `Optional` lifts `P<A, B>` to `P<S, T>` for any profunctor that is both
  * [Strong] and [Choice], via the generic method [runOptional]. Every [Lens] and [Prism] is an
- * `Optional`, so `lens andThen prism` yields one.
+ * `Optional`, so `lens andThen prism` yields one; every `Optional` is a [Traversal].
  *
  * Laws:
  * - Get-set: `getMaybe(set(a)(s)) == getMaybe(s).fmap { a }`
@@ -29,9 +30,12 @@ import com.github.kotlinz.kotlinz.type.profunctor.Strong
  * head.modify { it + 1 }(listOf())   // []
  * ```
  */
-interface Optional<S, T, A, B> {
+interface Optional<S, T, A, B> : Traversal<S, T, A, B> {
   /** Lifts [pab] through this optional using a strong and choice [profunctor]. */
   fun <P, F, Q> runOptional(profunctor: Q, pab: K3<P, F, A, B>): K3<P, F, S, T> where Q : Strong<P, F>, Q : Choice<P, F>
+
+  override fun <P, F> runTraversing(traversing: Traversing<P, F>, pab: K3<P, F, A, B>): K3<P, F, S, T> =
+    runOptional(traversing, pab)
 
   /** Hosts optional-related constructors such as [matching]. */
   companion object
