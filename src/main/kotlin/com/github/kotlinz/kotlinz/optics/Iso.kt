@@ -7,13 +7,14 @@ import com.github.kotlinz.kotlinz.data.function.Function1
 import com.github.kotlinz.kotlinz.data.function.Function1Profunctor
 import com.github.kotlinz.kotlinz.data.tagged.Tagged
 import com.github.kotlinz.kotlinz.data.tagged.TaggedProfunctor
+import com.github.kotlinz.kotlinz.type.profunctor.Choice
 import com.github.kotlinz.kotlinz.type.profunctor.Profunctor
 import com.github.kotlinz.kotlinz.type.profunctor.Strong
 
 /**
  * An isomorphism between `S` and `A` (polymorphic: `T` and `B` are the rebuilt types).
  *
- * Every `Iso` is a [Lens], so it composes with other optics through subtyping.
+ * Every `Iso` is both a [Lens] and a [Prism], so it composes with other optics through subtyping.
  *
  * Profunctor encoding: an `Iso` lifts any profunctor value `P<A, B>` to `P<S, T>`. Kotlin lacks
  * rank-2 types, so the quantification over the profunctor is the generic method [runProfunctor].
@@ -31,11 +32,12 @@ import com.github.kotlinz.kotlinz.type.profunctor.Strong
  * chars.modify { it.reversed() }("abc")        // "cba"
  * ```
  */
-interface Iso<S, T, A, B> : Lens<S, T, A, B> {
+interface Iso<S, T, A, B> : Lens<S, T, A, B>, Prism<S, T, A, B> {
   /** Lifts [pab] through this isomorphism using only [profunctor]. */
   fun <P, F> runProfunctor(profunctor: Profunctor<P, F>, pab: K3<P, F, A, B>): K3<P, F, S, T>
 
   override fun <P, F> runStrong(strong: Strong<P, F>, pab: K3<P, F, A, B>): K3<P, F, S, T> = runProfunctor(strong, pab)
+  override fun <P, F> runChoice(choice: Choice<P, F>, pab: K3<P, F, A, B>): K3<P, F, S, T> = runProfunctor(choice, pab)
 
   /** Hosts ready-made isomorphisms such as [id]. */
   companion object
