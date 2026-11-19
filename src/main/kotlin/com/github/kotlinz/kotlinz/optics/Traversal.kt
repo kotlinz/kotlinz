@@ -18,7 +18,7 @@ import com.github.kotlinz.kotlinz.type.profunctor.Wander
  *
  * Profunctor encoding: a `Traversal` lifts any [Traversing] profunctor value `P<A, B>` to `P<S, T>`
  * via the generic method [runTraversing]. Every [Optional] (hence every Lens, Prism and Iso) is a
- * `Traversal`, and every `Traversal` is a [Fold]. Ready-made traversals for `List`, `ListK`, `NonEmptyList` and `Maybe` live on the companion.
+ * `Traversal`, and every `Traversal` is both a [Fold] and a [Setter]. Ready-made traversals for `List`, `ListK`, `NonEmptyList` and `Maybe` live on the companion.
  *
  * Laws:
  * - Identity: `traverseOf(Identity, ::Identity, s) == Identity(s)` (equivalently `modify { it }(s) == s`)
@@ -32,9 +32,12 @@ import com.github.kotlinz.kotlinz.type.profunctor.Wander
  * each.traverseOf(object : MaybeApplicative {}, { n: Int -> Maybe.Just(n) }, listOf(1)) // Just([1])
  * ```
  */
-interface Traversal<S, T, A, B> : Fold<S, A> {
+interface Traversal<S, T, A, B> : Fold<S, A>, Setter<S, T, A, B> {
   /** Lifts [pab] through this traversal using [traversing]. */
   fun <P, F> runTraversing(traversing: Traversing<P, F>, pab: K3<P, F, A, B>): K3<P, F, S, T>
+
+  override fun runSetter(pab: Function1<A, B>): Function1<S, T> =
+    Function1.narrow(runTraversing(object : Function1Traversing {}, pab))
 
   override fun <R> runFold(monoid: MonoidOf<R>, pab: Forget<R, A, A>): Forget<R, S, S> {
     val traversing = object : ForgetTraversing<R> { override val monoid = monoid }
