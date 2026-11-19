@@ -38,6 +38,8 @@ interface Iso<S, T, A, B> : Lens<S, T, A, B>, Prism<S, T, A, B> {
 
   override fun <P, F> runStrong(strong: Strong<P, F>, pab: K3<P, F, A, B>): K3<P, F, S, T> = runProfunctor(strong, pab)
   override fun <P, F> runChoice(choice: Choice<P, F>, pab: K3<P, F, A, B>): K3<P, F, S, T> = runProfunctor(choice, pab)
+  override fun <P, F, Q> runOptional(profunctor: Q, pab: K3<P, F, A, B>): K3<P, F, S, T> where Q : Strong<P, F>, Q : Choice<P, F> =
+    runProfunctor(profunctor, pab)
 
   /** Hosts ready-made isomorphisms such as [id]. */
   companion object

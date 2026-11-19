@@ -3,14 +3,13 @@ package com.github.kotlinz.kotlinz.optics
 import com.github.kotlinz.kotlinz.K3
 import com.github.kotlinz.kotlinz.data.either.Either
 import com.github.kotlinz.kotlinz.data.forget.Forget
-import com.github.kotlinz.kotlinz.data.forget.ForgetChoice
 import com.github.kotlinz.kotlinz.data.function.Function1
 import com.github.kotlinz.kotlinz.data.function.Function1Choice
 import com.github.kotlinz.kotlinz.data.maybe.Maybe
-import com.github.kotlinz.kotlinz.data.monoidof.MonoidOf
 import com.github.kotlinz.kotlinz.data.tagged.Tagged
 import com.github.kotlinz.kotlinz.data.tagged.TaggedChoice
 import com.github.kotlinz.kotlinz.type.profunctor.Choice
+import com.github.kotlinz.kotlinz.type.profunctor.Strong
 
 /**
  * A focus on one case of a sum type: an `S` may contain an `A`, and a `B` always builds a `T`.
@@ -31,9 +30,12 @@ import com.github.kotlinz.kotlinz.type.profunctor.Choice
  * int.modify { it + 1 }("41")    // "42"
  * ```
  */
-interface Prism<S, T, A, B> {
+interface Prism<S, T, A, B> : Optional<S, T, A, B> {
   /** Lifts [pab] through this prism using [choice]. */
   fun <P, F> runChoice(choice: Choice<P, F>, pab: K3<P, F, A, B>): K3<P, F, S, T>
+
+  override fun <P, F, Q> runOptional(profunctor: Q, pab: K3<P, F, A, B>): K3<P, F, S, T> where Q : Strong<P, F>, Q : Choice<P, F> =
+    runChoice(profunctor, pab)
 
   /** Hosts ready-made prisms such as [just], [left] and [right]. */
   companion object
@@ -52,7 +54,7 @@ fun <S, T, A, B> Prism.Companion.matching(match: (S) -> Either<T, A>, reverseGet
 
 /** Returns the focus if this case matches. */
 fun <S, T, A, B> Prism<S, T, A, B>.getMaybe(s: S): Maybe<A> =
-  Forget.narrow(runChoice(firstChoice<A>(), Forget<Maybe<A>, A, B> { Maybe.Just(it) })).run(s)
+  Forget.narrow(runChoice(firstForget<A>(),Forget<Maybe<A>, A, B> { Maybe.Just(it) })).run(s)
 
 /** Builds a `T` from a `B`. */
 fun <S, T, A, B> Prism<S, T, A, B>.reverseGet(b: B): T =
@@ -68,16 +70,12 @@ infix fun <S, T, A, B, C, D> Prism<S, T, A, B>.andThen(other: Prism<A, B, C, D>)
     this@andThen.runChoice(choice, other.runChoice(choice, pab))
 }
 
-internal fun <A> firstChoice() = object : ForgetChoice<Maybe<A>> {
-  override val monoid = MonoidOf<Maybe<A>>(Maybe.None()) { a, b -> if (a is Maybe.Just) a else b }
-}
-
 private fun <A, S> Maybe<A>.toEither(s: S): Either<S, A> = when (this) {
   is Maybe.Just -> Either.Right(value)
   is Maybe.None -> Either.Left(s)
 }
 
-private fun <L, R, X> Either<L, R>.fold(onLeft: (L) -> X, onRight: (R) -> X): X = when (this) {
+internal fun <L, R, X> Either<L, R>.fold(onLeft: (L) -> X, onRight: (R) -> X): X = when (this) {
   is Either.Left -> onLeft(value)
   is Either.Right -> onRight(value)
 }

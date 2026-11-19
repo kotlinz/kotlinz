@@ -1,6 +1,7 @@
 package com.github.kotlinz.kotlinz.data.monoid
 
 import com.github.kotlinz.kotlinz.type.group.Band
+import com.github.kotlinz.kotlinz.type.group.CommutativeMonoid
 import com.github.kotlinz.kotlinz.type.group.Monoid
 
 /**
@@ -12,7 +13,7 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * Monoid.op(AnyMonoid::class.java, true.toAnyMonoid(), false.toAnyMonoid()) // AnyMonoid(true)
  * ```
  */
-data class AnyMonoid(val value: Boolean) : Monoid<Boolean, AnyMonoid>, Band<Boolean, AnyMonoid> {
+data class AnyMonoid(val value: Boolean) : Monoid<Boolean, AnyMonoid>, CommutativeMonoid<Boolean, AnyMonoid>, Band<Boolean, AnyMonoid> {
     /** Creates the identity element; required by reflective lookups such as `Monoid.mzero(type)`. */
     constructor(): this(false)
 

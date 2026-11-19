@@ -16,6 +16,9 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  *
  * Instances: Functor, Applicative, Selective, Monad, MonadError (error type `L`), Foldable, Traversable and Bifunctor.
 
+=======
+ * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor and Bifoldable.
+
  * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor, Bifoldable and, for a monoidal left type, Filterable and Witherable.
 
  * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor, Bifoldable and Bitraversable.
