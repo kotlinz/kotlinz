@@ -16,6 +16,8 @@ import com.github.kotlinz.kotlinz.type.group.Monoid
  * Instances: Functor, Applicative, Selective, Monad, MonadError (error type `L`), Foldable, Traversable and Bifunctor.
 
  * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor and Bifoldable.
+
+ * Instances: Functor, Applicative, Monad, MonadError (error type `L`), Foldable, Traversable, Bifunctor, Bifoldable and Bitraversable.
  *
  * ```kotlin
  * val parse = { s: String -> s.toIntOrNull()?.let { Either.Right<String, Int>(it) } ?: Either.Left("not a number: $s") }
@@ -66,6 +68,11 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
     /** Turns an [Either] of an effect into an effect of an [Either]. */
     fun <L, G, R> sequence(applicative: Applicative<G>, v: K1<K1<T, L>, K1<G, R>>): K1<G, K1<K1<T, L>, R>> = traversable<L>().sequence(applicative, v)
     private fun <L> traversable() = object: EitherTraversable<L> {}
+
+    // Bitraversable
+    /** Turns an [Either] of effects on both sides into an effect of an [Either]. */
+    fun <G, L, R> bisequence(applicative: Applicative<G>, v: K2<T, K1<G, L>, K1<G, R>>): K1<G, K2<T, L, R>> = bitraversable.bisequence(applicative, v)
+    private val bitraversable = object: EitherBitraversable {}
 
     // MonadError
     /** Creates a [Left] holding the error [e]. */
@@ -127,6 +134,11 @@ sealed class Either<L, R>: K2<Either.T, L, R> {
   /** Maps the [Left] value with [f] or the [Right] value with [g] into the monoid [M]. */
   fun <M: Monoid<*, M>> bifoldMap(type: Class<M>, f: (L) -> M, g: (R) -> M): M = bifoldable.bifoldMap(type, f, g, this)
   private val bifoldable = object: EitherBifoldable {}
+
+  // Bitraversable
+  /** Applies the effectful [f] to the [Left] value or [g] to the [Right] value and collects the result inside [G]. */
+  fun <G, M, S> bitraverse(applicative: Applicative<G>, f: (L) -> K1<G, M>, g: (R) -> K1<G, S>): K1<G, K2<T, M, S>> = bitraversable.bitraverse(applicative, f, g, this)
+  private val bitraversable = object: EitherBitraversable {}
 
   override fun equals(other: Any?): Boolean {
     return when {
